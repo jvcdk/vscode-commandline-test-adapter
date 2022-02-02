@@ -64,13 +64,13 @@ TODO
 
 The plugin supports the following settings properties:
 
-| Property                                   | Description                                                                                                                                                                                                                                                                                        | Default value                                                             |
-| ------------------------------------------ | --------------------------------------------------------------------------------------- | ---------------------
-| `commandLineTestAdapter.discoveryArgs`     | Array of arguments to discovery command.                                                         | `[]`
-| `commandLineTestAdapter.discoveryCommand`  | Command to enumerate tests. Please see documentation on how output should be formatted. |
-| `commandLineTestAdapter.testFolder`        | Working dir for running tests and discovery command.                                    | `${workspaceFolder}`
-| `commandLineTestAdapter.translateNewlines` | Translate newlines from '\n' to '\r\n' needed for terminal output.                      | True
-| `commandLineTestAdapter.parallelJobs`      | Maximum number of parallel test jobs to run (zero=autodetect, 1 or negative=disable).   | 0
+| Property                                   | Description                                                                                                                        | Default value
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------
+| `commandLineTestAdapter.discoveryArgs`     | Array of arguments to discovery command.                                                                                           | `[]`
+| `commandLineTestAdapter.discoveryCommand`  | Command to enumerate tests. Please see documentation on how output should be formatted.                                            |
+| `commandLineTestAdapter.testFolder`        | Working dir for running tests and discovery command.                                                                               | `${workspaceFolder}`
+| `commandLineTestAdapter.translateNewlines` | Translate newlines from '\n' to '\r\n' needed for terminal output.                                                                 | True
+| `commandLineTestAdapter.cpuCount`          | Maximum number of parallel test jobs to run. Number > 1: explicit count. Number <= 1: 1 job. String: Command to run to count CPUs. | `nproc`
 
 ### Variable substitution
 

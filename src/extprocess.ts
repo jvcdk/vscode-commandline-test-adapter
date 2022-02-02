@@ -22,12 +22,17 @@ import * as fs from 'fs';
     textFilter = (text: string) => text;
 
   return new Promise<ExtProcessResult>((resolve, reject) => {
+    let process: child_process.ChildProcessWithoutNullStreams;
     try {
-      // Note: statSync will throw an error if path doesn't exist
-      if (!fs.statSync(cwd).isDirectory())
-        throw new Error(`Directory '${cwd}' does not exist`);
+      if(cwd != undefined && cwd != '') {
+        // Note: statSync will throw an error if path doesn't exist
+        if (!fs.statSync(cwd).isDirectory())
+          throw new Error(`Directory '${cwd}' does not exist`);
 
-      const process = child_process.spawn( command, args, { cwd } );
+        process = child_process.spawn( command, args, { cwd } );
+      }
+      else
+        process = child_process.spawn( command, args );
 
       // Something failed, e.g. the executable or cwd doesn't exist
       if (!process.pid)

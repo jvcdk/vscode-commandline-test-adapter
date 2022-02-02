@@ -79,10 +79,10 @@
           "type": "array",
           "scope": "resource"
         },
-        "commandLineTestAdapter.parallelJobs": {
-          "description": "Maximum number of parallel test jobs to run (zero=autodetect, 1 or negative=disable).",
-          "type": "integer",
-          "default": 0,
+        "commandLineTestAdapter.cpuCount": {
+          "description": "Maximum number of parallel test jobs to run. Number > 1: explicit count. Number <= 1: 1 job. String: Command to run to count CPUs.",
+          "type": "string",
+          "default": "nproc",
           "scope": "resource"
         }
       }

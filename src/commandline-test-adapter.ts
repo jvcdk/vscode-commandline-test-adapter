@@ -70,8 +70,41 @@ export class CommandLineTestAdapter {
     }
   
     const testRun = this.testController.createTestRun(request);
-    this.testRunner = new TestRunner(testRun, this.testInternalData, this.log, token, translateNewlines, 4);
+    this.testRunner = new TestRunner(testRun, this.testInternalData, this.log, token, translateNewlines, await this.getCpuCount());
     this.testRunner.runTest(tests);
+  }
+
+  async getCpuCount(): Promise<number> {
+    let [cpuCountStr] = this.getConfigStrings(['cpuCount']);
+    let cpuCount = +cpuCountStr;
+    if(!isNaN(cpuCount))
+      return cpuCount;
+
+    cpuCount = 1;
+    await runExternalProcess(cpuCountStr, [], "", true).then((result) => {
+      if(result.stdErr.length > 0)
+        this.log.appendLine(result.stdErr.join("\r\n"));
+      if(result.returnCode == 0) {
+        if(result.stdOut.length == 0)
+          this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr} returned no output.`);
+        else {
+          if(result.stdOut.length > 1)
+            this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr} returned multiple lines of output. Reading just the first line.`);
+          cpuCountStr = result.stdOut[0];
+          cpuCount = +result.stdOut[0];
+          if(isNaN(cpuCount))
+            this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr}: Not an int: ${cpuCountStr}`);
+        }
+      }
+      else {
+        this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr} returned err code ${result.returnCode}.`);
+        if(result.stdOut.length > 0) {
+          this.log.appendLine(`Stdout:`);
+          this.log.appendLine(result.stdOut.join("\r\n"));
+        }
+      }
+    }).catch((reason) => this.log.appendLine(reason));
+    return cpuCount;
   }
 
   private parseDiscoveryString(testFolder : string, text: string[]) {
