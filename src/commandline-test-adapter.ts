@@ -69,8 +69,8 @@ export class CommandLineTestAdapter {
         .forEach(test => tests.push(test));
     }
   
-    const testRun = this.testController.createTestRun(request, "HEJ");
-    this.testRunner = new TestRunner(testRun, this.testInternalData, this.log, token, translateNewlines);
+    const testRun = this.testController.createTestRun(request);
+    this.testRunner = new TestRunner(testRun, this.testInternalData, this.log, token, translateNewlines, 4);
     this.testRunner.runTest(tests);
   }
 
@@ -144,7 +144,7 @@ export class CommandLineTestAdapter {
   }
 
   private getNewId() : string {
-    return `gta-${this.idCounter++}`;
+    return `cmdline-test-${this.idCounter++}`;
   }
 
   private getConfigStrings(names: string[]) {

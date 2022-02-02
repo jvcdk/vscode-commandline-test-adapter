@@ -3,8 +3,8 @@ import { TestInternalData } from './test-internal-data'
 import { runExternalProcess } from './extprocess';
 
 export class TestRunner {
-  private internalJobCount : number = 0;
   private cancelRequested: boolean = false;
+  private testsToRun: vscode.TestItem[] = [];
 
   constructor(
     private readonly testRunInstance: vscode.TestRun,
@@ -12,29 +12,65 @@ export class TestRunner {
     private readonly log: vscode.OutputChannel,
     private readonly token: vscode.CancellationToken,
     private readonly translateNewlines: boolean,
-  ) { }
-
-  async runTest(tests: vscode.TestItem[]) {
-    if(this.token.isCancellationRequested || this.cancelRequested)
-      return;
-
-    tests.forEach(test => this.doRunTest(test));
+    private readonly cpuCount: number,
+  )
+  {
+    if(cpuCount < 1)
+      cpuCount = 1;
   }
 
-  private async doRunTest(test:vscode.TestItem) {
-    if(this.token.isCancellationRequested || this.cancelRequested)
-      return;
+  async runTest(tests: vscode.TestItem[]) {
+    tests.forEach(test => this.testsToRun.push(test));
+    this.runQueue();
+  }
+
+  private async runQueue()
+  {
+    const jobsRunning: Promise<vscode.TestItem>[] = []; // Must be in sync
+    const testsRunning: vscode.TestItem[] = [];         // Must be in sync
+
+    while(this.testsToRun.length > 0 || jobsRunning.length > 0) {
+      while(jobsRunning.length < this.cpuCount) {
+        const test = this.testsToRun.shift();
+        if(test == undefined)
+          break;
+        testsRunning.push(test);
+        jobsRunning.push(this.doRunTest(test));
+      }
+
+      if(jobsRunning.length > 0) {
+        const test = await Promise.race(jobsRunning);
+
+        const index = testsRunning.indexOf(test);
+        if (index < 0)
+          this.log.appendLine("Unexpected error: Could not find test item in list of running jobs.");
+        else {
+          testsRunning.splice(index, 1);
+          jobsRunning.splice(index, 1);
+        }
+      }
+    }
+
+    this.testRunInstance.end();
+  }
+
+  private async doRunTest(test:vscode.TestItem) : Promise<vscode.TestItem> {
+    if(this.token.isCancellationRequested || this.cancelRequested) {
+      this.testRunInstance.skipped(test);
+      return test;
+    }
 
     let data = this.testData.get(test);
     if(data == undefined) {
       this.log.appendLine(`Error: Could not find internal data for test ${test.label}.`);
-      return;
+      this.testRunInstance.failed(test, new vscode.TestMessage(`Error: Could not find internal data for test ${test.label}.`));
+      return test;
     }
 
-    if(data.command == "")
-      return;
-
-    this.internalJobCount++;
+    if(data.command == "") {
+      this.testRunInstance.passed(test);
+      return test;
+    }
 
     let args = data.args.map(arg => `"${arg}"`).join(" ");
     this.testRunInstance.appendOutput(`Running test ${test.label}, command: ${data.command} ${args}`);
@@ -58,9 +94,7 @@ export class TestRunner {
           if(result.stdErr.length > 0)
             this.testRunInstance.appendOutput(result.stdErr.join("\r\n"));
 
-          let children: vscode.TestItem[] = [];
-          test.children.forEach(test => children.push(test))
-          this.runTest(children);
+          test.children.forEach(test => this.testsToRun.push(test))
         }
         else {
           this.testRunInstance.failed(test, new vscode.TestMessage(errMsg), Date.now() - start);
@@ -72,10 +106,7 @@ export class TestRunner {
     }
 
     test.busy = false;
-    this.internalJobCount--;
-
-    if(this.internalJobCount == 0)
-      this.testRunInstance.end();
+    return test;
   }
 
   public dispose(): void {
