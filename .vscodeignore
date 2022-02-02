@@ -5,4 +5,4 @@
 !package.json
 !README.md
 !out/**/*.js
-!node_modules/**/*.d.ts
+!node_modules/**
