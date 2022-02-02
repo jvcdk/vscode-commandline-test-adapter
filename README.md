@@ -96,3 +96,4 @@ Note, Windows: Variable names are case insensitive but must be uppercase for `en
  - Implement max parallel run of tests.
  - Implement file watcher.
  - Set up demo example (this workspace) to show how it works.
+ - Add icon to project.
