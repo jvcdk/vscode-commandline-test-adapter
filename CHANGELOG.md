@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## 0.3.2
  * Bugfix in console output.
+ * Added refresh-test command.
 
 ## 0.3.1
 Updated dependencies to fix vulnerabilities.

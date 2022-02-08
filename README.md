@@ -54,8 +54,8 @@ file changes to watch for, and hence this would be an expensive solution.
 
 Instead the following solutions are implemented:
 
-#### Refresh command
-TODO
+#### Re-discover command
+Use the `CommandLine Tests: Re-discover tests` command to re-run the discovery of command line tests.
 
 #### File Watcher specification
 TODO
@@ -92,7 +92,6 @@ Note, Windows: Variable names are case insensitive but must be uppercase for `en
 
 
 ## TODO
- - Implement refresh command.
  - Implement file watcher.
  - Set up demo example (this workspace) to show how it works.
  - Add icon to project.

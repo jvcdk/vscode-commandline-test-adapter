@@ -20,7 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const log = vscode.window.createOutputChannel("Command Line Test Adapter");
   context.subscriptions.push(log);
 
-  const controller = vscode.tests.createTestController("JVC/CommandLineTestAdapter", "Command Line Test Adapter");
+  const controller = vscode.tests.createTestController("vscode-commandline-test-adapter", "Command Line Test Adapter");
   context.subscriptions.push(controller);
 
   const adapter = new CommandLineTestAdapter(controller, workspaceFolder, log);
@@ -28,6 +28,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   controller.resolveHandler = () => adapter.discoverTests();
   controller.createRunProfile('Run', vscode.TestRunProfileKind.Run, (request, token) => adapter.runTest(request, token));
+
+  const command = 'vscode-commandline-test-adapter.rediscoverTests';
+  context.subscriptions.push(vscode.commands.registerCommand(command, () => adapter.discoverTests()));
 }
 
 export function deactivate() {}

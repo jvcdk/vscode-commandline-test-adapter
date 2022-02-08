@@ -53,6 +53,12 @@
     "onStartupFinished"
   ],
   "contributes": {
+    "commands": [
+      {
+        "command": "vscode-commandline-test-adapter.rediscoverTests",
+        "title": "CommandLine Tests: Re-discover tests"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "Command Line Test Adapter",
