@@ -73,7 +73,7 @@ export class TestRunner {
     }
 
     let args = data.args.map(arg => `"${arg}"`).join(" ");
-    this.testRunInstance.appendOutput(`Running test ${test.label}, command: ${data.command} ${args}`);
+    this.testRunInstance.appendOutput(`Running test ${test.label}, command: ${data.command} ${args}\r\n`);
 
     test.busy = true;
     const start = Date.now();
@@ -86,6 +86,7 @@ export class TestRunner {
           if(result.stdErr.length > 0) {
             errMsg = result.stdErr.join("\r\n");
             this.testRunInstance.appendOutput(errMsg); // Work-around: At the moment it seems that the UI does not show message from testRunInstance.failed(...)
+            this.testRunInstance.appendOutput("\r\n");
           }
 
         if(result.returnCode == 0) {
@@ -103,6 +104,7 @@ export class TestRunner {
     } catch(e) {
       this.testRunInstance.errored(test, new vscode.TestMessage(e.message), Date.now() - start);
       this.testRunInstance.appendOutput(e.message); // Work-around: At the moment it seems that the UI does not show message from testRunInstance.errored(...)
+      this.testRunInstance.appendOutput("\r\n");
     }
 
     test.busy = false;
