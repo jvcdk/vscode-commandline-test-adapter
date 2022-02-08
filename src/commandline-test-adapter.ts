@@ -88,12 +88,9 @@ export class CommandLineTestAdapter {
         if(result.stdOut.length == 0)
           this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr} returned no output.`);
         else {
-          if(result.stdOut.length > 1)
-            this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr} returned multiple lines of output. Reading just the first line.`);
-          cpuCountStr = result.stdOut[0];
-          cpuCount = +result.stdOut[0];
+          cpuCount = +result.stdOut;
           if(isNaN(cpuCount))
-            this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr}: Not an int: ${cpuCountStr}`);
+            this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr}: Not an int: ${result.stdOut}`);
         }
       }
       else {
