@@ -80,12 +80,11 @@ export class TestRunner {
     try {
       await runExternalProcess(data.command, data.args, data.testFolder, this.translateNewlines).then((result) => {
         if(result.stdOut.length > 0)
-          this.testRunInstance.appendOutput(result.stdOut.join("\r\n"));
+          this.testRunInstance.appendOutput(result.stdOut);
 
           let errMsg = "";
           if(result.stdErr.length > 0) {
-            errMsg = result.stdErr.join("\r\n");
-            this.testRunInstance.appendOutput(errMsg); // Work-around: At the moment it seems that the UI does not show message from testRunInstance.failed(...)
+            this.testRunInstance.appendOutput(result.stdErr); // Work-around: At the moment it seems that the UI does not show message from testRunInstance.failed(...)
             this.testRunInstance.appendOutput("\r\n");
           }
 
@@ -93,7 +92,7 @@ export class TestRunner {
           this.testRunInstance.passed(test, Date.now() - start);
 
           if(result.stdErr.length > 0)
-            this.testRunInstance.appendOutput(result.stdErr.join("\r\n"));
+            this.testRunInstance.appendOutput(result.stdErr);
 
           test.children.forEach(test => this.testsToRun.push(test))
         }

@@ -37,14 +37,14 @@ export class CommandLineTestAdapter {
 
       await runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines).then((result) => {
         if(result.stdErr.length > 0)
-          this.log.appendLine(result.stdErr.join("\r\n"));
+          this.log.appendLine(result.stdErr);
         if(result.returnCode == 0)
           this.parseDiscoveryString(testFolder, result.stdOut);
         else {
           this.log.appendLine(`Discovery of tests returned err code ${result.returnCode}.`);
           if(result.stdOut.length > 0) {
             this.log.appendLine(`Stdout:`);
-            this.log.appendLine(result.stdOut.join("\r\n"));
+            this.log.appendLine(result.stdOut);
           }
         }
       }).catch((reason) => this.log.appendLine(reason));
@@ -83,7 +83,7 @@ export class CommandLineTestAdapter {
     cpuCount = 1;
     await runExternalProcess(cpuCountStr, [], "", true).then((result) => {
       if(result.stdErr.length > 0)
-        this.log.appendLine(result.stdErr.join("\r\n"));
+        this.log.appendLine(result.stdErr);
       if(result.returnCode == 0) {
         if(result.stdOut.length == 0)
           this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr} returned no output.`);
@@ -100,17 +100,16 @@ export class CommandLineTestAdapter {
         this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr} returned err code ${result.returnCode}.`);
         if(result.stdOut.length > 0) {
           this.log.appendLine(`Stdout:`);
-          this.log.appendLine(result.stdOut.join("\r\n"));
+          this.log.appendLine(result.stdOut);
         }
       }
     }).catch((reason) => this.log.appendLine(reason));
     return cpuCount;
   }
 
-  private parseDiscoveryString(testFolder : string, text: string[]) {
-    const joinedText = text.join('');
+  private parseDiscoveryString(testFolder : string, text: string) {
     try {
-      const data = JSON.parse(joinedText);
+      const data = JSON.parse(text);
       if(Object.prototype.toString.call(data) === '[object Array]') {
         this.testInternalData = new WeakMap<vscode.TestItem, TestInternalData>();
         var tests = this.parseDiscoveryData(testFolder, data);
@@ -121,7 +120,7 @@ export class CommandLineTestAdapter {
         this.log.appendLine("Got unexpected json data from discover command.");
         this.log.appendLine("Please see documentation for supported data structure.");
         this.log.appendLine("Received data:");
-        this.log.appendLine(joinedText);
+        this.log.appendLine(text);
       }
     }
     catch(e) {
@@ -129,7 +128,7 @@ export class CommandLineTestAdapter {
       this.log.appendLine("Err message:");
       this.log.appendLine(String(e));
       this.log.appendLine("Received data:");
-      this.log.appendLine(joinedText);
+      this.log.appendLine(text);
     }
   }
 

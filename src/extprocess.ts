@@ -39,14 +39,18 @@ import * as fs from 'fs';
         throw new Error(`Cannot launch command '${command}'`);
 
       let result = new ExtProcessResult();
-      process.stdout.on('data', (data: string) => result.stdOut.push(textFilter(String(data))));
-      process.stderr.on('data', (data: string) => result.stdErr.push(textFilter(String(data))));
+      let stdOut: string[] = [];
+      let stdErr: string[] = [];
+      process.stdout.on('data', (data: string) => stdOut.push(textFilter(String(data))));
+      process.stderr.on('data', (data: string) => stdErr.push(textFilter(String(data))));
       process.on('exit', (code) => {
         if(code === null)
           result.returnCode = 255;
         else
           result.returnCode = code;
-        resolve(result);
+          result.stdErr = stdErr.join("");
+          result.stdOut = stdOut.join("");
+          resolve(result);
       });
     } catch (e) {
       reject(e);
@@ -56,6 +60,6 @@ import * as fs from 'fs';
 
 export class ExtProcessResult {
   public returnCode: number = 0;
-  public stdOut: string[] = [];
-  public stdErr: string[] = [];
+  public stdOut: string = "";
+  public stdErr: string = "";
 }
