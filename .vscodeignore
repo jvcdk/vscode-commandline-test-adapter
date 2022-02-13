@@ -5,4 +5,8 @@
 !package.json
 !README.md
 !out/**/*.js
-!node_modules/**
+!images/**
+
+!node_modules/**/*.js
+!node_modules/**/package.json
+!node_modules/**/LICENSE
