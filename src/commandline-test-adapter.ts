@@ -8,6 +8,7 @@ export class CommandLineTestAdapter {
   private testRunner: TestRunner | undefined = undefined;
   private testInternalData = new WeakMap<vscode.TestItem, TestInternalData>();
   private idCounter : number = 0;
+  private fileWatchers : Array<vscode.FileSystemWatcher> = [];
 
   constructor(
     private readonly testController: vscode.TestController,
@@ -15,6 +16,28 @@ export class CommandLineTestAdapter {
     private readonly log: vscode.OutputChannel
   ) {
     this.log.appendLine('Initializing.');
+  }
+
+  setupFileWatchers() {
+    this.clearFileWatchers();
+
+    let [fileWatcherPatterns] = this.getConfigArrays(['watch']);
+    if(Object.prototype.toString.call(fileWatcherPatterns) == "[object Array]" && fileWatcherPatterns.length > 0) {
+      for(const pattern of fileWatcherPatterns) {
+        const relPattern = new vscode.RelativePattern(this.workspaceFolder, pattern);
+        const watcher = vscode.workspace.createFileSystemWatcher(relPattern);
+        watcher.onDidCreate(uri => this.discoverTests());
+        watcher.onDidChange(uri => this.discoverTests());
+        watcher.onDidDelete(uri => this.discoverTests());
+        this.fileWatchers.push(watcher);
+      }
+    }
+  }
+
+  private clearFileWatchers() {
+    for(const watcher of this.fileWatchers)
+      watcher.dispose();
+    this.fileWatchers.length = 0;
   }
 
   async discoverTests() {
@@ -179,18 +202,18 @@ export class CommandLineTestAdapter {
     return `cmdline-test-${this.idCounter++}`;
   }
 
-  getConfigStrings(names: string[]) {
+  private getConfigStrings(names: string[]) {
     const config = this.getWorkspaceConfiguration();
     const varMap = this.getVariableSubstitutionMap();
     return names.map((name) => this.configGetStr(config, varMap, name));
   }
 
-  getConfigBooleans(names: string[]) {
+  private getConfigBooleans(names: string[]) {
     const config = this.getWorkspaceConfiguration();
     return names.map((name) => config.get<boolean>(name) || false);
   }
 
-  getConfigArrays(names: string[]) {
+  private getConfigArrays(names: string[]) {
     const config = this.getWorkspaceConfiguration();
     const varMap = this.getVariableSubstitutionMap();
     return names.map((name) => this.configGetArray(config, varMap, name));
@@ -268,6 +291,7 @@ export class CommandLineTestAdapter {
 
   dispose(): void {
     this.testRunner?.dispose();
+    this.clearFileWatchers();
   }
 }
 
