@@ -19,6 +19,9 @@ This plugin uses the native test explorer API from VS Code.
  - Inspect test output via the `Show Output` toolbar button in the GUI.
  - Jump to source code with the `Go to Test` button.
 
+ Alternatively, just open up this workspace with VS Code and try it out for yourself. It will pop up with a notification that this extension is recommended;
+ accept to install it and go to the Test Explorer UI to start exploring this extension.
+
 
 ## Discovery command output specification
 
@@ -42,6 +45,8 @@ Note that
 * All fields except `label` are optional.
 * The recursive references; a test can have children (of same object / format) which in turn can have children etc.
 
+Please see the [example discovery command](testdata/discover-tests) to see an implementation of this in Python.
+
 
 ## Re-discovery of tests
 
@@ -58,7 +63,11 @@ Instead the following solutions are implemented:
 Use the `CommandLine Tests: Re-discover tests` command to re-run the discovery of command line tests.
 
 #### File Watcher specification
-TODO
+Use the `commandLineTestAdapter.watch` settings to set an array of file watcher patterns on which the discovery command should be re-run.
+
+Be careful not to just set it to your whole workspace. Running the discovery on each build of your project my put an unnecessary load on your system
+and it will clear the test results on each run. Probably not what you wanted.
+
 
 ## Configuration
 
@@ -93,6 +102,4 @@ Note, Windows: Variable names are case insensitive but must be uppercase for `en
 
 
 ## TODO
- - Implement file watcher.
- - Set up demo example (this workspace) to show how it works.
  - Add icon to project.

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.4.0
+ * Implemented file watcher feature.
+ * Implemented on-settings-changed hook (updating the extension).
+ * Added demo example.
+ * Minor bug fixes.
+
 ## 0.3.3
 Bugfix.
 
