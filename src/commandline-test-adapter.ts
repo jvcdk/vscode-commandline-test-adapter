@@ -35,6 +35,9 @@ export class CommandLineTestAdapter {
       if(discoveryCommand == "")
         throw new Error("Missing discovery command. Please set in settings: commandLineTestAdapter.discoveryCommand");
 
+      if(Object.prototype.toString.call(discoveryCommand) != "[object String]")
+        throw new Error("Setting commandLineTestAdapter.discoveryCommand should be a string.");
+
       await runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines).then((result) => {
         if(result.stdErr.length > 0)
           this.log.appendLine(result.stdErr);
