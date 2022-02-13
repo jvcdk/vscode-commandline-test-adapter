@@ -68,7 +68,8 @@ export class TestRunner {
     }
 
     if(data.command == "") {
-      this.testRunInstance.passed(test);
+      this.testRunInstance.skipped(test);
+      test.children.forEach(test => this.testsToRun.push(test))
       return test;
     }
 
