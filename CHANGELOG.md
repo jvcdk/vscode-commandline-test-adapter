@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
  * Implemented on-settings-changed hook (updating the extension).
  * Added demo example.
  * Minor bug fixes.
+ * Added icon.
+ * Removed non-needed files. Both from repo and from package.
 
 ## 0.3.3
 Bugfix.
