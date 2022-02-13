@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+
+import json
+
+# Hard-coded list of tests
+# In a real-life example, you would enumerate these from files in your workspace
+
+class TestItem:
+    def __init__(self, name, command, args, file, line) -> None:
+        self.label = name
+        self.command = command
+        self.args = args
+        self.file = file
+        self.line = line
+        self.children = []
+
+tests = [
+    {
+        "label": "Always-true",
+        "command": "/bin/true",
+        "args": [],
+        "file": "testdata/discover-tests",
+        "line": 19,
+        "children": [],
+    },
+    {
+        "label": "Always-false",
+        "command": "/bin/false",
+        "args": [],
+        "file": "testdata/discover-tests",
+        "line": 27,
+        "children": [],
+    },
+    {
+        "label": "Generate random number 0-9",
+        "command": "testdata/run-tests.sh",
+        "args": ["genRandom"],
+        "file": "testdata/run-tests.sh",
+        "line": 13,
+        "children": [
+        {
+            "label": "Compare 1 to parent generated random number.",
+            "command": "testdata/run-tests.sh",
+            "args": ["compare", "1"],
+            "file": "testdata/run-tests.sh",
+            "line": 18,
+            "children": [],
+        },
+        {
+            "label": "Compare 5 to parent generated random number.",
+            "command": "testdata/run-tests.sh",
+            "args": ["compare", "5"],
+            "file": "testdata/run-tests.sh",
+            "line": 18,
+            "children": [],
+        },
+        {
+            "label": "Compare 8 to parent generated random number.",
+            "command": "testdata/run-tests.sh",
+            "args": ["compare", "8"],
+            "file": "testdata/run-tests.sh",
+            "line": 18,
+            "children": [],
+        },
+        ],
+    },
+    {
+        "label": "Section (no test cmd) holding sub-tests",
+        "command": "",
+        "args": [],
+        "file": "",
+        "line": 1,
+        "children": [
+        {
+            "label": "Success 9 of 10 times.",
+            "command": "testdata/run-tests.sh",
+            "args": ["random", "1"],
+            "file": "testdata/run-tests.sh",
+            "line": 26,
+            "children": [],
+        },
+        {
+            "label": "Success 5 of 10 times.",
+            "command": "testdata/run-tests.sh",
+            "args": ["random", "5"],
+            "file": "testdata/run-tests.sh",
+            "line": 26,
+            "children": [],
+        },
+        {
+            "label": "Success 2 of 10 times.",
+            "command": "testdata/run-tests.sh",
+            "args": ["random", "8"],
+            "file": "testdata/run-tests.sh",
+            "line": 26,
+            "children": [],
+        },
+        ],
+    },
+]
+
+print(json.dumps(tests))
