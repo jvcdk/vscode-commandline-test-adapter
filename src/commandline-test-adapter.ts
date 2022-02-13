@@ -154,7 +154,7 @@ export class CommandLineTestAdapter {
 
       if(!isEmpty(testCase.line)) {
         const lineNo = +testCase.line;
-        test.range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, 0));
+        test.range = new vscode.Range(new vscode.Position(lineNo-1, 0), new vscode.Position(lineNo-1, 0));
       }
 
       if(!isEmpty(testCase.command)) {
