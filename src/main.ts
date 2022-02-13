@@ -31,6 +31,18 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const command = 'vscode-commandline-test-adapter.rediscoverTests';
   context.subscriptions.push(vscode.commands.registerCommand(command, () => adapter.discoverTests()));
+
+  let [fileWatcherPatterns] = adapter.getConfigArrays(['watch']);
+  if(Object.prototype.toString.call(fileWatcherPatterns) == "[object Array]" && fileWatcherPatterns.length > 0) {
+    for(const pattern of fileWatcherPatterns) {
+      const relPattern = new vscode.RelativePattern(workspaceFolder, pattern);
+      const watcher = vscode.workspace.createFileSystemWatcher(relPattern);
+      watcher.onDidCreate(uri => adapter.discoverTests());
+      watcher.onDidChange(uri => adapter.discoverTests());
+      watcher.onDidDelete(uri => adapter.discoverTests());
+      context.subscriptions.push(watcher);
+    }
+  }
 }
 
 export function deactivate() {}

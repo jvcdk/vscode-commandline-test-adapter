@@ -63,16 +63,27 @@
       "type": "object",
       "title": "Command Line Test Adapter",
       "properties": {
-        "commandLineTestAdapter.testFolder": {
-          "description": "Working dir for running tests and discovery command.",
+        "commandLineTestAdapter.cpuCount": {
+          "description": "Maximum number of parallel test jobs to run. Number > 1: explicit count. Number <= 1: 1 job. String: Command to run to count CPUs.",
           "type": "string",
-          "scope": "resource",
-          "default": "${workspaceFolder}"
+          "default": "nproc",
+          "scope": "resource"
+        },
+        "commandLineTestAdapter.discoveryArgs": {
+          "description": "Array of arguments to discovery command.",
+          "type": "array",
+          "scope": "resource"
         },
         "commandLineTestAdapter.discoveryCommand": {
           "description": "Command to enumerate tests. Please see documentation on how output should be formatted.",
           "type": "string",
           "scope": "resource"
+        },
+        "commandLineTestAdapter.testFolder": {
+          "description": "Working dir for running tests and discovery command.",
+          "type": "string",
+          "scope": "resource",
+          "default": "${workspaceFolder}"
         },
         "commandLineTestAdapter.translateNewlines": {
           "description": "Translate newlines from '\n' to '\r\n' needed for terminal output.",
@@ -80,15 +91,9 @@
           "scope": "resource",
           "default": true
         },
-        "commandLineTestAdapter.discoveryArgs": {
-          "description": "Array of arguments to discovery command.",
+        "commandLineTestAdapter.watch": {
+          "description": "Array of file patterns to watch to update the tests (re-run the discovery command).",
           "type": "array",
-          "scope": "resource"
-        },
-        "commandLineTestAdapter.cpuCount": {
-          "description": "Maximum number of parallel test jobs to run. Number > 1: explicit count. Number <= 1: 1 job. String: Command to run to count CPUs.",
-          "type": "string",
-          "default": "nproc",
           "scope": "resource"
         }
       }

@@ -179,18 +179,18 @@ export class CommandLineTestAdapter {
     return `cmdline-test-${this.idCounter++}`;
   }
 
-  private getConfigStrings(names: string[]) {
+  getConfigStrings(names: string[]) {
     const config = this.getWorkspaceConfiguration();
     const varMap = this.getVariableSubstitutionMap();
     return names.map((name) => this.configGetStr(config, varMap, name));
   }
 
-  private getConfigBooleans(names: string[]) {
+  getConfigBooleans(names: string[]) {
     const config = this.getWorkspaceConfiguration();
     return names.map((name) => config.get<boolean>(name) || false);
   }
 
-  private getConfigArrays(names: string[]) {
+  getConfigArrays(names: string[]) {
     const config = this.getWorkspaceConfiguration();
     const varMap = this.getVariableSubstitutionMap();
     return names.map((name) => this.configGetArray(config, varMap, name));

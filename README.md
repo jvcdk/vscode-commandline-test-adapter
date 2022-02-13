@@ -66,11 +66,12 @@ The plugin supports the following settings properties:
 
 | Property                                   | Description                                                                                                                        | Default value
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------
+| `commandLineTestAdapter.cpuCount`          | Maximum number of parallel test jobs to run. Number > 1: explicit count. Number <= 1: 1 job. String: Command to run to count CPUs. | `nproc`
 | `commandLineTestAdapter.discoveryArgs`     | Array of arguments to discovery command.                                                                                           | `[]`
 | `commandLineTestAdapter.discoveryCommand`  | Command to enumerate tests. Please see documentation on how output should be formatted.                                            |
 | `commandLineTestAdapter.testFolder`        | Working dir for running tests and discovery command.                                                                               | `${workspaceFolder}`
 | `commandLineTestAdapter.translateNewlines` | Translate newlines from '\n' to '\r\n' needed for terminal output.                                                                 | True
-| `commandLineTestAdapter.cpuCount`          | Maximum number of parallel test jobs to run. Number > 1: explicit count. Number <= 1: 1 job. String: Command to run to count CPUs. | `nproc`
+| `commandLineTestAdapter.watch`             | Array of file patterns to watch to update the tests (re-run the discovery command).                                                |
 
 ### Variable substitution
 
