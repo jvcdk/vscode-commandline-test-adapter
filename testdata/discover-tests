@@ -5,15 +5,6 @@ import json
 # Hard-coded list of tests
 # In a real-life example, you would enumerate these from files in your workspace
 
-class TestItem:
-    def __init__(self, name, command, args, file, line) -> None:
-        self.label = name
-        self.command = command
-        self.args = args
-        self.file = file
-        self.line = line
-        self.children = []
-
 tests = [
     {
         "label": "Always-true",
