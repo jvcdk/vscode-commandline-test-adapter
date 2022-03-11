@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## 0.4.2
  * When running tests, stderr is now merged to stdout (during run) to preserve order of output.
  * Implement override option of setting testFolder for each test case.
+ * Implement variable substitution in test parameters: Command, args, and testFolder.
 
 ## 0.4.1
 Bugfix.

@@ -103,5 +103,4 @@ Note, Windows: Variable names are case insensitive but must be uppercase for `en
 
 
 ## Wish list
- - Variable substitution in test command and args.
  - When re-discovering tests, existing tests should be updated (instead of clearing all tests and re-creating them, collapsing the Test Explorer view and states).

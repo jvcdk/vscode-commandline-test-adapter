@@ -164,13 +164,13 @@ export class CommandLineTestAdapter {
 
       let instanceTestFolder = testFolder;
       if(!isEmpty(testCase.testFolder))
-        instanceTestFolder = testCase.testFolder;
+        instanceTestFolder = this.substituteString(testCase.testFolder);
       if(!path.isAbsolute(instanceTestFolder))
         instanceTestFolder = path.join(this.workspaceFolder.uri.fsPath, instanceTestFolder);
 
       let uri = undefined;
       if(!isEmpty(testCase.file)) {
-        let file = String(testCase.file);
+        let file = this.substituteString(String(testCase.file));
         if(!path.isAbsolute(file))
           file = path.join(instanceTestFolder, file)
         uri = vscode.Uri.file(file);
@@ -193,8 +193,8 @@ export class CommandLineTestAdapter {
         else if(Object.prototype.toString.call(testCase.args) === '[object String]')
           args.push(testCase.args);
 
-          internalData.command = testCase.command;
-          internalData.args = args;
+          internalData.command = this.substituteString(testCase.command);
+          internalData.args = this.substituteStrArray(args);
       }
 
       if(Object.prototype.toString.call(testCase.children) === '[object Array]')
@@ -210,8 +210,7 @@ export class CommandLineTestAdapter {
 
   private getConfigStrings(names: string[]) {
     const config = this.getWorkspaceConfiguration();
-    const varMap = this.getVariableSubstitutionMap();
-    return names.map((name) => this.configGetStr(config, varMap, name));
+    return names.map((name) => this.configGetStr(config, name));
   }
 
   private getConfigBooleans(names: string[]) {
@@ -221,8 +220,7 @@ export class CommandLineTestAdapter {
 
   private getConfigArrays(names: string[]) {
     const config = this.getWorkspaceConfiguration();
-    const varMap = this.getVariableSubstitutionMap();
-    return names.map((name) => this.configGetArray(config, varMap, name));
+    return names.map((name) => this.configGetArray(config, name));
   }
 
   /**
@@ -270,11 +268,24 @@ export class CommandLineTestAdapter {
    */
    private configGetStr(
     config: vscode.WorkspaceConfiguration,
-    varMap: Map<string, string>,
     key: string
   ) {
     const configStr = config.get<string>(key) || '';
-    return substituteString(configStr, varMap);
+    return this.substituteString(configStr);
+  }
+
+  private substituteString(str: string)
+  {
+    const varMap = this.getVariableSubstitutionMap();
+    return substituteString(str, varMap);
+  }
+
+  private substituteStrArray(strs: string[])
+  {
+    const varMap = this.getVariableSubstitutionMap();
+    for(var idx = 0; idx < strs.length; idx++)
+      strs[idx] = substituteString(strs[idx], varMap);
+      return strs;
   }
 
   /**
@@ -286,13 +297,10 @@ export class CommandLineTestAdapter {
    */
      private configGetArray(
       config: vscode.WorkspaceConfiguration,
-      varMap: Map<string, string>,
       key: string
     ) {
       let configArr = config.get<Array<string>>(key) || [];
-      for(var idx = 0; idx < configArr.length; idx++)
-        configArr[idx] = substituteString(configArr[idx], varMap);
-      return configArr;
+      return this.substituteStrArray(configArr);
     }
 
   dispose(): void {

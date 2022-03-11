@@ -24,9 +24,9 @@ tests = [
     },
     {
         "label": "Generate random number 0-9",
-        "command": "testdata/run-tests.sh",
+        "command": "${workspaceFolder}/testdata/run-tests.sh",
         "args": ["genRandom"],
-        "file": "testdata/run-tests.sh",
+        "file": "${workspaceFolder}/testdata/run-tests.sh",
         "line": 13,
         "children": [
         {
