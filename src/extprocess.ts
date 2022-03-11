@@ -13,6 +13,7 @@ import * as fs from 'fs';
   args: Array<string>,
   cwd: string,
   translateNewlines: boolean,
+  mergeStderrToStdout: boolean
 ): Promise<ExtProcessResult>
 {
   let textFilter: (text: string) => string;
@@ -42,15 +43,18 @@ import * as fs from 'fs';
       let stdOut: string[] = [];
       let stdErr: string[] = [];
       process.stdout.on('data', (data: string) => stdOut.push(textFilter(String(data))));
-      process.stderr.on('data', (data: string) => stdErr.push(textFilter(String(data))));
+      if(mergeStderrToStdout)
+        process.stderr.on('data', (data: string) => stdErr.push(textFilter(String(data))));
+      else
+        process.stderr.on('data', (data: string) => stdOut.push(textFilter(String(data))));
       process.on('exit', (code) => {
         if(code === null)
           result.returnCode = 255;
         else
           result.returnCode = code;
-          result.stdErr = stdErr.join("");
-          result.stdOut = stdOut.join("");
-          resolve(result);
+        result.stdErr = stdErr.join("");
+        result.stdOut = stdOut.join("");
+        resolve(result);
       });
     } catch (e) {
       reject(e);

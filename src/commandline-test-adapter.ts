@@ -61,7 +61,7 @@ export class CommandLineTestAdapter {
       if(Object.prototype.toString.call(discoveryCommand) != "[object String]")
         throw new Error("Setting commandLineTestAdapter.discoveryCommand should be a string.");
 
-      await runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines).then((result) => {
+      await runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines, /* mergeStderrToStdout */ false).then((result) => {
         if(result.stdErr.length > 0)
           this.log.appendLine(result.stdErr);
         if(result.returnCode == 0)
@@ -107,7 +107,7 @@ export class CommandLineTestAdapter {
       return cpuCount;
 
     cpuCount = 1;
-    await runExternalProcess(cpuCountStr, [], "", true).then((result) => {
+    await runExternalProcess(cpuCountStr, [], "", /* translateNewlines */ true, /* mergeStderrToStdout */ false).then((result) => {
       if(result.stdErr.length > 0)
         this.log.appendLine(result.stdErr);
       if(result.returnCode == 0) {

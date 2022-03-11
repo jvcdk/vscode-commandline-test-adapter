@@ -79,27 +79,16 @@ export class TestRunner {
     test.busy = true;
     const start = Date.now();
     try {
-      await runExternalProcess(data.command, data.args, data.testFolder, this.translateNewlines).then((result) => {
+      await runExternalProcess(data.command, data.args, data.testFolder, this.translateNewlines, /* mergeStderrToStdout */ true).then((result) => {
         if(result.stdOut.length > 0)
           this.testRunInstance.appendOutput(result.stdOut);
 
-          let errMsg = "";
-          if(result.stdErr.length > 0) {
-            this.testRunInstance.appendOutput(result.stdErr); // Work-around: At the moment it seems that the UI does not show message from testRunInstance.failed(...)
-            this.testRunInstance.appendOutput("\r\n");
-          }
-
         if(result.returnCode == 0) {
           this.testRunInstance.passed(test, Date.now() - start);
-
-          if(result.stdErr.length > 0)
-            this.testRunInstance.appendOutput(result.stdErr);
-
           test.children.forEach(test => this.testsToRun.push(test))
         }
-        else {
-          this.testRunInstance.failed(test, new vscode.TestMessage(errMsg), Date.now() - start);
-        }
+        else
+          this.testRunInstance.failed(test, new vscode.TestMessage("Test failed. Please see test log."), Date.now() - start);
       });
     } catch(e) {
       this.testRunInstance.errored(test, new vscode.TestMessage(e.message), Date.now() - start);
