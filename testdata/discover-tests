@@ -72,7 +72,7 @@ tests = [
             "children": [],
         },
         {
-            "label": "Success 5 of 10 times",
+            "label": "Success 5 of 10 times adf afd",
             "command": "./run-tests.sh",
             "args": ["random", "5"],
             "file": "run-tests.sh",

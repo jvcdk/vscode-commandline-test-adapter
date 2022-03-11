@@ -135,8 +135,7 @@ export class CommandLineTestAdapter {
       const data = JSON.parse(text);
       if(Object.prototype.toString.call(data) === '[object Array]') {
         this.testInternalData = new WeakMap<vscode.TestItem, TestInternalData>();
-        var tests = this.parseDiscoveryData(testFolder, data);
-        this.testController.items.replace(tests);
+        this.parseDiscoveryData(testFolder, data, this.testController.items);
       }
 
       else {
@@ -155,53 +154,91 @@ export class CommandLineTestAdapter {
     }
   }
 
-  private parseDiscoveryData(testFolder: string, tests: any[]) : vscode.TestItem[] {
-    return tests.map<any>(testCase => {
+  private parseDiscoveryData(testFolder: string, tests: any[], collection: vscode.TestItemCollection) {
+    let existingTests: string[] = [];
+    collection.forEach(existing => existingTests.push(existing.id));
+
+    tests.forEach(testCase => {
       if(isEmpty(testCase.label)) {
         this.log.appendLine("Empty label. Ignoring test case.");
         return;
       }
 
-      let instanceTestFolder = testFolder;
-      if(!isEmpty(testCase.testFolder))
-        instanceTestFolder = this.substituteString(testCase.testFolder);
-      if(!path.isAbsolute(instanceTestFolder))
-        instanceTestFolder = path.join(this.workspaceFolder.uri.fsPath, instanceTestFolder);
+      var test = this.processTestCase(testFolder, testCase, collection);
+      let idx = existingTests.indexOf(test.id);
+      if(idx >= 0)
+        existingTests.splice(idx, 1);
 
-      let uri = undefined;
-      if(!isEmpty(testCase.file)) {
-        let file = this.substituteString(String(testCase.file));
-        if(!path.isAbsolute(file))
-          file = path.join(instanceTestFolder, file)
-        uri = vscode.Uri.file(file);
-      }
-
-      let test = this.testController.createTestItem(this.getNewId(), testCase.label, uri);
-      let internalData = new TestInternalData();
-      internalData.testFolder = instanceTestFolder;
-      this.testInternalData.set(test, internalData);
-
-      if(!isEmpty(testCase.line)) {
-        const lineNo = +testCase.line;
-        test.range = new vscode.Range(new vscode.Position(lineNo-1, 0), new vscode.Position(lineNo-1, 0));
-      }
-
-      if(!isEmpty(testCase.command)) {
-        let args: string[] = [];
-        if(Object.prototype.toString.call(testCase.args) === '[object Array]')
-          testCase.args.forEach((arg: string) => args.push(arg));
-        else if(Object.prototype.toString.call(testCase.args) === '[object String]')
-          args.push(testCase.args);
-
-          internalData.command = this.substituteString(testCase.command);
-          internalData.args = this.substituteStrArray(args);
-      }
-
-      if(Object.prototype.toString.call(testCase.children) === '[object Array]')
-        test.children.replace(this.parseDiscoveryData(testFolder, testCase.children));
-
-      return test;
+      if (Object.prototype.toString.call(testCase.children) === '[object Array]')
+        this.parseDiscoveryData(testFolder, testCase.children, test.children);
     });
+
+    existingTests.forEach(removedTest => {
+      let instance = collection.get(removedTest);
+      if(instance == undefined)
+        return;
+      collection.delete(removedTest);
+      this.testInternalData.delete(instance)
+    });
+  }
+
+  private processTestCase(testFolder: string, testCase: any, collection: vscode.TestItemCollection) : vscode.TestItem {
+    let instanceTestFolder = testFolder;
+    if (!isEmpty(testCase.testFolder))
+      instanceTestFolder = this.substituteString(testCase.testFolder);
+    if (!path.isAbsolute(instanceTestFolder))
+      instanceTestFolder = path.join(this.workspaceFolder.uri.fsPath, instanceTestFolder);
+
+    let uri = undefined;
+    if (!isEmpty(testCase.file)) {
+      let file = this.substituteString(String(testCase.file));
+      if (!path.isAbsolute(file))
+        file = path.join(instanceTestFolder, file);
+      uri = vscode.Uri.file(file);
+    }
+
+    let [test, internalData] = this.GetCreateVsCodeTestCase(collection, testCase.label, uri);
+
+    internalData.testFolder = instanceTestFolder;
+
+    if (!isEmpty(testCase.line)) {
+      const lineNo = +testCase.line;
+      test.range = new vscode.Range(new vscode.Position(lineNo - 1, 0), new vscode.Position(lineNo - 1, 0));
+    }
+
+    if (!isEmpty(testCase.command)) {
+      let args: string[] = [];
+      if (Object.prototype.toString.call(testCase.args) === '[object Array]')
+        testCase.args.forEach((arg: string) => args.push(arg));
+      else if (Object.prototype.toString.call(testCase.args) === '[object String]')
+        args.push(testCase.args);
+
+      internalData.command = this.substituteString(testCase.command);
+      internalData.args = this.substituteStrArray(args);
+    }
+
+    return test;
+  }
+
+  private GetCreateVsCodeTestCase(collection: vscode.TestItemCollection, label: string, uri: vscode.Uri | undefined): [vscode.TestItem, TestInternalData] {
+    let test: vscode.TestItem | undefined = undefined;
+    collection.forEach((entry: vscode.TestItem) => {
+      if(entry.label == label && entry.uri?.path == uri?.path)
+        test = entry;
+    });
+
+    if(test == undefined) {
+      test = this.testController.createTestItem(this.getNewId(), label, uri);
+      collection.add(test);
+    }
+
+    let internalData = this.testInternalData.get(test);
+    if(internalData == undefined) {
+      internalData = new TestInternalData();
+      this.testInternalData.set(test, internalData);
+    }
+
+    return [test, internalData];
   }
 
   private getNewId() : string {

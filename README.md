@@ -51,14 +51,23 @@ Please see the [example discovery command](testdata/discover-tests) to see an im
 
 ## Re-discovery of tests
 
-If the list of tests has changed in your workspace, this is not automatically reflected in the Test Explorer.
-The reason for this is that VS Code invites plugins to make use of `FileWatcher`s and react to any changes
-in the workspace. 
+If the list of tests has changed in your workspace, there are two possible ways to let this be reflected in the
+Test Explorer UI:
 
-However, it is difficult for this extension (where you can run arbitrarily discovery commands) to know which
-file changes to watch for, and hence this would be an expensive solution.
+ * Manually triggering the re-discover command.
+ * Setting up a file watcher pattern.
 
-Instead the following solutions are implemented:
+See further below.
+
+Note also that when re-discovering tests, pre-existing tests are preserved in Test Explorer. Pre-existing tests are identified by
+
+* The given label
+* The given file.
+
+Change any of these, and a new test instance (in the Test Explorer) has to be created.
+
+Note also that if the given test had children, they will also be re-instantiated. The Test Explorer UI will collapse the children
+and their test-run state will be reset.
 
 #### Re-discover command
 Use the `CommandLine Tests: Re-discover tests` command to re-run the discovery of command line tests.
@@ -103,4 +112,5 @@ Note, Windows: Variable names are case insensitive but must be uppercase for `en
 
 
 ## Wish list
- - When re-discovering tests, existing tests should be updated (instead of clearing all tests and re-creating them, collapsing the Test Explorer view and states).
+
+Empty for the time being :)
