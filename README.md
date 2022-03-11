@@ -101,5 +101,8 @@ Environments variables are prefixed with `env:`. For example `${env:HOME}` will 
 Note, Windows: Variable names are case insensitive but must be uppercase for `env:` substitition to work properly.
 
 
-## TODO
- - Add icon to project.
+## Wish list
+ - CWD option on each test entry. Should be optional with global setting fallback.
+ - Variable substitution in test command and args.
+ - When re-discovering tests, existing tests should be updated (instead of clearing all tests and re-creating them, collapsing the Test Explorer view and states).
+ - When reading command output, just merge stdout and sterr. Current setup where they are read by themselves and then output (first stdout, then stderr) messes with readability of console output.
