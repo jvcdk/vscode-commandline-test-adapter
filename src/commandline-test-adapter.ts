@@ -158,7 +158,7 @@ export class CommandLineTestAdapter {
   private parseDiscoveryData(testFolder: string, tests: any[]) : vscode.TestItem[] {
     return tests.map<any>(testCase => {
       if(isEmpty(testCase.label)) {
-        this.log.appendLine("Empty label. Ignoring testcase.");
+        this.log.appendLine("Empty label. Ignoring test case.");
         return;
       }
 
