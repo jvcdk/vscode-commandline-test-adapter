@@ -162,17 +162,23 @@ export class CommandLineTestAdapter {
         return;
       }
 
+      let instanceTestFolder = testFolder;
+      if(!isEmpty(testCase.testFolder))
+        instanceTestFolder = testCase.testFolder;
+      if(!path.isAbsolute(instanceTestFolder))
+        instanceTestFolder = path.join(this.workspaceFolder.uri.fsPath, instanceTestFolder);
+
       let uri = undefined;
       if(!isEmpty(testCase.file)) {
         let file = String(testCase.file);
         if(!path.isAbsolute(file))
-          file = path.join(testFolder, file)
+          file = path.join(instanceTestFolder, file)
         uri = vscode.Uri.file(file);
       }
 
       let test = this.testController.createTestItem(this.getNewId(), testCase.label, uri);
       let internalData = new TestInternalData();
-      internalData.testFolder = testFolder;
+      internalData.testFolder = instanceTestFolder;
       this.testInternalData.set(test, internalData);
 
       if(!isEmpty(testCase.line)) {

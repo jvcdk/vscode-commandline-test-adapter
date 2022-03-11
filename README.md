@@ -32,6 +32,7 @@ struct TestItem {
   string label;         // Test name shown in Test UI
   string command;       // Test command to run
   string args[];        // Array of arguments passed to test command
+  string testFolder;    // Override setting commandLineTestAdapter.testFolder for this specific test.
   string file;          // Source file for test
   uint line;            // Line number in source file for test
   TestItem children[];  // Children of this test
@@ -102,6 +103,5 @@ Note, Windows: Variable names are case insensitive but must be uppercase for `en
 
 
 ## Wish list
- - CWD option on each test entry. Should be optional with global setting fallback.
  - Variable substitution in test command and args.
  - When re-discovering tests, existing tests should be updated (instead of clearing all tests and re-creating them, collapsing the Test Explorer view and states).
