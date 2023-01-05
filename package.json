@@ -70,6 +70,12 @@
           "default": "nproc",
           "scope": "resource"
         },
+        "commandLineTestAdapter.defaultDebugConfig": {
+          "description": "Name of default debug configuration to use.",
+          "type": "string",
+          "default": "CltaDebug",
+          "scope": "resource"
+        },
         "commandLineTestAdapter.discoveryArgs": {
           "description": "Array of arguments to discovery command.",
           "type": "array",
