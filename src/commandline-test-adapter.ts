@@ -81,11 +81,21 @@ export class CommandLineTestAdapter {
   }
 
   async runTest(request: vscode.TestRunRequest, token: vscode.CancellationToken) {
+    const testRun = this.testController.createTestRun(request);
+
     let [translateNewlines] = this.getConfigBooleans(['translateNewlines']);
+    this.testRunner = new TestRunner(testRun, this.testInternalData, this.log, token, translateNewlines, await this.getCpuCount());
+
+    const tests: vscode.TestItem[] = this.getTestsFromRequest(request);
+    this.testRunner.runTest(tests);
+  }
+
+  private getTestsFromRequest(request: vscode.TestRunRequest) {
     const tests: vscode.TestItem[] = [];
-    if(request.include == undefined) {
+    if (request.include == undefined) {
       this.testController.items.forEach(test => {
-        if(request.exclude?.indexOf(test) != -1) return;
+        if (request.exclude?.indexOf(test) != -1)
+          return;
         tests.push(test);
       });
     }
@@ -94,10 +104,7 @@ export class CommandLineTestAdapter {
         .filter(test => request.exclude?.indexOf(test) == -1)
         .forEach(test => tests.push(test));
     }
-  
-    const testRun = this.testController.createTestRun(request);
-    this.testRunner = new TestRunner(testRun, this.testInternalData, this.log, token, translateNewlines, await this.getCpuCount());
-    this.testRunner.runTest(tests);
+    return tests;
   }
 
   async getCpuCount(): Promise<number> {
