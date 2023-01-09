@@ -208,9 +208,10 @@ export class CommandLineTestAdapter {
 
     if (!isEmpty(testCase.command)) {
       let args: string[] = [];
-      if (Object.prototype.toString.call(testCase.args) === '[object Array]')
+      let argsAsStr = Object.prototype.toString.call(testCase.args);
+      if (argsAsStr === '[object Array]')
         testCase.args.forEach((arg: string) => args.push(arg));
-      else if (Object.prototype.toString.call(testCase.args) === '[object String]')
+      else if (argsAsStr === '[object String]')
         args.push(testCase.args);
 
       internalData.command = this.substituteString(testCase.command);
