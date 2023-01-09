@@ -208,14 +208,22 @@ export class CommandLineTestAdapter {
 
     if (!isEmpty(testCase.command)) {
       let args: string[] = [];
-      let argsAsStr = Object.prototype.toString.call(testCase.args);
-      if (argsAsStr === '[object Array]')
+      let argsType = Object.prototype.toString.call(testCase.args);
+      if (argsType === '[object Array]')
         testCase.args.forEach((arg: string) => args.push(arg));
-      else if (argsAsStr === '[object String]')
+      else if (argsType === '[object String]')
         args.push(testCase.args);
 
       internalData.command = this.substituteString(testCase.command);
       internalData.args = this.substituteStrArray(args);
+    }
+
+    if(!isEmpty(testCase.debugConfig)) {
+      let debugConfigType = Object.prototype.toString.call(testCase.debugConfig);
+      if(debugConfigType === '[object String]')
+        internalData.debugConfig = testCase.debugConfig;
+      else
+        this.log.appendLine(`Unsupported object type '${debugConfigType}' for property 'debugConfig' on test case '${test.label}'.`);
     }
 
     return test;
