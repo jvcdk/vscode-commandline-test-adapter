@@ -139,6 +139,13 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
     return debugConfiguration;
   }
 
+  resolveDebugConfigurationWithSubstitutedVariables(folder: vscode.WorkspaceFolder | undefined, debugConfiguration: vscode.DebugConfiguration, token?: vscode.CancellationToken | undefined): vscode.ProviderResult<vscode.DebugConfiguration> {
+    this.log.appendLine(`Launching debug session '${debugConfiguration.name}':`)
+    this.log.appendLine(` - Program: '${debugConfiguration['program']}':`)
+    this.log.appendLine(` - Args: '${debugConfiguration['args']}':`)
+    return debugConfiguration;
+  }
+
   private prepareDebugSession(defaultDebugConfig: string, test: vscode.TestItem) : [ boolean, string ] {
     let data = this.testInternalData.get(test);
     let setupOk = true;
