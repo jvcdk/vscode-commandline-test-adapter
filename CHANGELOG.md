@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.1.0
+Implemented support for launching debug sessions via setting `commandLineTestAdapter.debugConfig` or test property `debugConfig`.
+
 ## 1.0.0
 Nothing new (except 3rd party vulnerability update) but I wanted to indicate that I see this plugin as mature and usable.
 

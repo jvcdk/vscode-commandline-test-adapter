@@ -32,6 +32,7 @@ struct TestItem {
   string label;         // Test name shown in Test UI
   string command;       // Test command to run
   string args[];        // Array of arguments passed to test command
+  string debugConfig;   // Override setting commandLineTestAdapter.debugConfig for this specific test.
   string testFolder;    // Override setting commandLineTestAdapter.testFolder for this specific test.
   string file;          // Source file for test
   uint line;            // Line number in source file for test
@@ -86,6 +87,7 @@ The plugin supports the following settings properties:
 | Property                                   | Description                                                                                                                        | Default value
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------
 | `commandLineTestAdapter.cpuCount`          | Maximum number of parallel test jobs to run. Number > 1: explicit count. Number <= 1: 1 job. String: Command to run to count CPUs. | `nproc`
+| `commandLineTestAdapter.debugConfig`       | Name of debug configuration (defined in `launch.json`) to use for debugging.                                                         | `CltaDebug`
 | `commandLineTestAdapter.discoveryArgs`     | Array of arguments to discovery command.                                                                                           | `[]`
 | `commandLineTestAdapter.discoveryCommand`  | Command to enumerate tests. Please see documentation on how output should be formatted.                                            |
 | `commandLineTestAdapter.testFolder`        | Working dir for running tests and discovery command.                                                                               | `${workspaceFolder}`
@@ -110,6 +112,21 @@ Environments variables are prefixed with `env:`. For example `${env:HOME}` will 
 
 Note, Windows: Variable names are case insensitive but must be uppercase for `env:` substitution to work properly.
 
+
+## Debugging
+
+Debugging is supported via the `debugConfig` setting / property. When launching a debug session, the following process starts:
+
+1. The required debug session is resolved and loaded:
+   1. If the to-be-launched test contains the property `debugConfig`, then this is used.
+   2. Else, if the setting `commandLineTestAdapter.debugConfig` is non-empty, then this is used.
+   3. Else an error is reported.
+   4. If the named debug configuration does not exist in `launch.json`, an error is reported.
+
+2. The `program` and `args` properties from the to-be-launched test is copied to the debug configuration.
+   * If the debug configuration properties `program` or `args` are non-empty, a warning is issued.
+
+3. The debug session is launched.
 
 ## Wish list
 
