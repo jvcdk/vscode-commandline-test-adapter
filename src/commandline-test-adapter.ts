@@ -93,7 +93,7 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
   }
 
   async debugTest(request: vscode.TestRunRequest, token: vscode.CancellationToken) {
-    let [defaultDebugConfig] = this.getConfigStrings(['defaultDebugConfig']);
+    let [defaultDebugConfig] = this.getConfigStrings(['debugConfig']);
     const tests: vscode.TestItem[] = this.getTestsFromRequest(request);
     for(let test of tests) {
       if(token.isCancellationRequested)
@@ -145,7 +145,7 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
     let debugConfig = data?.debugConfig || defaultDebugConfig;
     if (isEmpty(debugConfig)) {
       this.log.appendLine(`Could not start debugging of '${test.label}'.`);
-      this.log.appendLine(`Discovery command did not specify a debug configuration explicitly, and ${Constants.SettingsKey}.defaultDebugConfig is not set.`);
+      this.log.appendLine(`Discovery command did not specify a debug configuration explicitly, and ${Constants.SettingsKey}.debugConfig is not set.`);
       setupOk = false;
     }
 

@@ -70,7 +70,7 @@
           "default": "nproc",
           "scope": "resource"
         },
-        "commandLineTestAdapter.defaultDebugConfig": {
+        "commandLineTestAdapter.debugConfig": {
           "description": "Name of default debug configuration to use.",
           "type": "string",
           "default": "CltaDebug",
