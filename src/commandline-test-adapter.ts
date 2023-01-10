@@ -5,11 +5,12 @@ import { TestInternalData } from './test-internal-data'
 import { TestRunner } from './test-runner'
 import { Constants } from './constants';
 
-export class CommandLineTestAdapter {
+export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider {
   private testRunner: TestRunner | undefined = undefined;
   private testInternalData = new WeakMap<vscode.TestItem, TestInternalData>();
   private idCounter : number = 0;
   private fileWatchers : Array<vscode.FileSystemWatcher> = [];
+  private debugActiveTest? : vscode.TestItem = undefined;
 
   constructor(
     private readonly testController: vscode.TestController,
@@ -91,7 +92,74 @@ export class CommandLineTestAdapter {
     this.testRunner.runTest(tests);
   }
 
-  private getTestsFromRequest(request: vscode.TestRunRequest) {
+  async debugTest(request: vscode.TestRunRequest, token: vscode.CancellationToken) {
+    let [defaultDebugConfig] = this.getConfigStrings(['defaultDebugConfig']);
+    const tests: vscode.TestItem[] = this.getTestsFromRequest(request);
+    for(let test of tests) {
+      if(token.isCancellationRequested)
+        return;
+
+      let [ setupOk, debugConfig ] = this.prepareDebugSession(defaultDebugConfig, test);
+      if(!setupOk)
+        continue;
+
+      this.debugActiveTest = test; // used in resolveDebugConfiguration
+      await vscode.debug.startDebugging(this.workspaceFolder, debugConfig)
+        .then(
+          result => {}, // Do nothing
+          reason => {
+            this.log.appendLine(`Could not start debugging of '${test.label}'.`);
+            this.log.appendLine(reason);
+          }
+        );
+
+      this.debugActiveTest = undefined; // Mark that we are exited launch-mode
+    }
+  }
+
+  resolveDebugConfiguration?(folder: vscode.WorkspaceFolder | undefined, debugConfiguration: vscode.DebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration> {
+    if(token?.isCancellationRequested)
+      return debugConfiguration;
+
+    if(this.debugActiveTest == undefined)
+      throw new Error("Unexpected error: Internal data field not set up.");
+
+    let data = this.testInternalData.get(this.debugActiveTest);
+    if(data == undefined)
+      throw new Error("Unexpected error: Internal data object not found.");
+
+    if(!isEmpty(debugConfiguration["program"]))
+      this.log.appendLine(`Warning: 'program' field of '${debugConfiguration.name}' was not empty - it will be overwritten.`);
+    debugConfiguration["program"] = data.command;
+
+    if(!isEmpty(debugConfiguration["args"]))
+      this.log.appendLine(`Warning: 'args' field of '${debugConfiguration.name}' was not empty - it will be overwritten.`);
+    debugConfiguration["args"] = data.args;
+
+    return debugConfiguration;
+  }
+
+  private prepareDebugSession(defaultDebugConfig: string, test: vscode.TestItem) : [ boolean, string ] {
+    let data = this.testInternalData.get(test);
+    let setupOk = true;
+    let debugConfig = data?.debugConfig || defaultDebugConfig;
+    if (isEmpty(debugConfig)) {
+      this.log.appendLine(`Could not start debugging of '${test.label}'.`);
+      this.log.appendLine(`Discovery command did not specify a debug configuration explicitly, and ${Constants.SettingsKey}.defaultDebugConfig is not set.`);
+      setupOk = false;
+    }
+
+    if (this.debugActiveTest != undefined) {
+      this.log.appendLine(`Unexpected error: Trying to launch '${test.label}' while '${this.debugActiveTest.label}' is already in the process of launching.`);
+      setupOk = false;
+    }
+    if(!setupOk)
+      vscode.window.showErrorMessage(`Could not launch debug task for ${test.label}. Please see Command Line Test Adapter log window`);
+
+    return [ setupOk, debugConfig ];
+  }
+
+  private getTestsFromRequest(request: vscode.TestRunRequest) : vscode.TestItem[] {
     const tests: vscode.TestItem[] = [];
     if (request.include == undefined) {
       this.testController.items.forEach(test => {

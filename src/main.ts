@@ -29,9 +29,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
   controller.resolveHandler = () => adapter.discoverTests();
   controller.createRunProfile('Run', vscode.TestRunProfileKind.Run, (request, token) => adapter.runTest(request, token));
+  controller.createRunProfile('Debug', vscode.TestRunProfileKind.Debug, (request, token) => adapter.debugTest(request, token));
 
   const command = Constants.Id + '.rediscoverTests';
   context.subscriptions.push(vscode.commands.registerCommand(command, () => adapter.discoverTests()));
+  context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider("*", adapter));
 
   adapter.setupFileWatchers();
 
