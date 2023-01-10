@@ -4,6 +4,7 @@
 
 import * as vscode from 'vscode';
 import { CommandLineTestAdapter } from './commandline-test-adapter';
+import { Constants } from './constants';
 
 /**
  * Main extension entry point
@@ -17,10 +18,10 @@ export async function activate(context: vscode.ExtensionContext) {
   if(workspaceFolder == undefined)
     return;
 
-  const log = vscode.window.createOutputChannel("Command Line Test Adapter");
+  const log = vscode.window.createOutputChannel(Constants.Name);
   context.subscriptions.push(log);
 
-  const controller = vscode.tests.createTestController("vscode-commandline-test-adapter", "Command Line Test Adapter");
+  const controller = vscode.tests.createTestController(Constants.Id, Constants.Name);
   context.subscriptions.push(controller);
 
   const adapter = new CommandLineTestAdapter(controller, workspaceFolder, log);
@@ -29,16 +30,16 @@ export async function activate(context: vscode.ExtensionContext) {
   controller.resolveHandler = () => adapter.discoverTests();
   controller.createRunProfile('Run', vscode.TestRunProfileKind.Run, (request, token) => adapter.runTest(request, token));
 
-  const command = 'vscode-commandline-test-adapter.rediscoverTests';
+  const command = Constants.Id + '.rediscoverTests';
   context.subscriptions.push(vscode.commands.registerCommand(command, () => adapter.discoverTests()));
 
   adapter.setupFileWatchers();
 
   vscode.workspace.onDidChangeConfiguration((ev) => {
-    if(ev.affectsConfiguration("commandLineTestAdapter.discoveryCommand") || ev.affectsConfiguration("commandLineTestAdapter.discoveryArgs"))
+    if(ev.affectsConfiguration(Constants.SettingsKey + ".discoveryCommand") || ev.affectsConfiguration(Constants.SettingsKey + ".discoveryArgs"))
       adapter.discoverTests();
 
-    if(ev.affectsConfiguration("commandLineTestAdapter.watch"))
+    if(ev.affectsConfiguration(Constants.SettingsKey + ".watch"))
       adapter.setupFileWatchers();
   });
 }

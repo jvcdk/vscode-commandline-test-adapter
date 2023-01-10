@@ -3,6 +3,7 @@ import * as path from 'path';
 import { runExternalProcess } from './extprocess';
 import { TestInternalData } from './test-internal-data'
 import { TestRunner } from './test-runner'
+import { Constants } from './constants';
 
 export class CommandLineTestAdapter {
   private testRunner: TestRunner | undefined = undefined;
@@ -56,10 +57,10 @@ export class CommandLineTestAdapter {
         testFolder = this.workspaceFolder.uri.fsPath;
 
       if(discoveryCommand == "")
-        throw new Error("Missing discovery command. Please set in settings: commandLineTestAdapter.discoveryCommand");
+        throw new Error(`Missing discovery command. Please set in settings: ${Constants.SettingsKey}.discoveryCommand`);
 
       if(Object.prototype.toString.call(discoveryCommand) != "[object String]")
-        throw new Error("Setting commandLineTestAdapter.discoveryCommand should be a string.");
+        throw new Error(`Setting ${Constants.SettingsKey}.discoveryCommand should be a string.`);
 
       await runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines, /* mergeStderrToStdout */ false).then((result) => {
         if(result.stdErr.length > 0)
@@ -280,10 +281,7 @@ export class CommandLineTestAdapter {
    * Get workspace configuration object
    */
   private getWorkspaceConfiguration() {
-    return vscode.workspace.getConfiguration(
-      'commandLineTestAdapter',
-      this.workspaceFolder.uri
-    );
+    return vscode.workspace.getConfiguration(Constants.SettingsKey, this.workspaceFolder.uri);
   }
 
   /**
