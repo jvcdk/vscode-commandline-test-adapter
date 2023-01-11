@@ -124,7 +124,8 @@ Debugging is supported via the `debugConfig` setting / property. When launching 
    4. If the named debug configuration does not exist in `launch.json`, an error is reported.
 
 2. The `program` and `args` properties from the to-be-launched test is copied to the debug configuration.
-   * If the debug configuration properties `program` or `args` are non-empty, a warning is issued.
+   * If the debug configuration property `program` is non-empty, a warning is issued.
+   * If the debug configuration property `args` is non-empty, it is prepended to the launch command.
 
 3. The debug session is launched.
 
