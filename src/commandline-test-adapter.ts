@@ -122,7 +122,7 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
       return debugConfiguration;
 
     if(this.debugActiveTest == undefined)
-      throw new Error("Unexpected error: Internal data field not set up.");
+      return; // Not our session to launch
 
     let data = this.testInternalData.get(this.debugActiveTest);
     if(data == undefined)
@@ -140,6 +140,9 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
   }
 
   resolveDebugConfigurationWithSubstitutedVariables(folder: vscode.WorkspaceFolder | undefined, debugConfiguration: vscode.DebugConfiguration, token?: vscode.CancellationToken | undefined): vscode.ProviderResult<vscode.DebugConfiguration> {
+    if(this.debugActiveTest == undefined)
+      return; // Not our session to launch
+
     this.log.appendLine(`Launching debug session '${debugConfiguration.name}':`)
     this.log.appendLine(` - Program: '${debugConfiguration['program']}':`)
     this.log.appendLine(` - Args: '${debugConfiguration['args']}':`)
