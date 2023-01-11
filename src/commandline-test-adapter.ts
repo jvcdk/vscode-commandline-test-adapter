@@ -144,8 +144,8 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
       return; // Not our session to launch
 
     this.log.appendLine(`Launching debug session '${debugConfiguration.name}':`)
-    this.log.appendLine(` - Program: '${debugConfiguration['program']}':`)
-    this.log.appendLine(` - Args: '${debugConfiguration['args']}':`)
+    this.log.appendLine(` - Program: '${debugConfiguration['program']}'`)
+    this.log.appendLine(` - Args: '${debugConfiguration['args']}'`)
     return debugConfiguration;
   }
 
