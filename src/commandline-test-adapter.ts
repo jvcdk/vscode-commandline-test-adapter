@@ -145,7 +145,7 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
       let args = debugConfiguration['args'].map((arg: string) => `"${arg}"`).join(" ");
       let command = debugConfiguration['program'];
       this.log.appendLine(`Launching debug session '${this.debugActiveTest.label}', command: ${command} ${args}`);
-      }
+    }
 
     return debugConfiguration;
   }
