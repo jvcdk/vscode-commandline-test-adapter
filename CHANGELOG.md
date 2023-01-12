@@ -4,8 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.1.4
+ * Update log output wording.
+ * Bugfix: Could not start 'normal' debugging sessions.
+
 ## 1.1.3
-Update log output 
+No changes (erroneous publish).
 
 ## 1.1.2
 Minor behavioural change: Command arguments in debug configurations are now prepended when launching 
