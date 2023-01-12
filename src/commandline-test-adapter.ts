@@ -141,12 +141,12 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
   }
 
   resolveDebugConfigurationWithSubstitutedVariables(folder: vscode.WorkspaceFolder | undefined, debugConfiguration: vscode.DebugConfiguration, token?: vscode.CancellationToken | undefined): vscode.ProviderResult<vscode.DebugConfiguration> {
-    if(this.debugActiveTest == undefined)
-      return; // Not our session to launch
+    if(this.debugActiveTest != undefined) {
+      let args = debugConfiguration['args'].map((arg: string) => `"${arg}"`).join(" ");
+      let command = debugConfiguration['program'];
+      this.log.appendLine(`Launching debug session '${this.debugActiveTest.label}', command: ${command} ${args}`);
+      }
 
-    this.log.appendLine(`Launching debug session '${debugConfiguration.name}':`)
-    this.log.appendLine(` - Program: '${debugConfiguration['program']}'`)
-    this.log.appendLine(` - Args: '${debugConfiguration['args']}'`)
     return debugConfiguration;
   }
 

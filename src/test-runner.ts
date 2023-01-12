@@ -74,7 +74,7 @@ export class TestRunner {
     }
 
     let args = data.args.map(arg => `"${arg}"`).join(" ");
-    this.testRunInstance.appendOutput(`Running test ${test.label}, command: ${data.command} ${args}\r\n`);
+    this.testRunInstance.appendOutput(`Running test '${test.label}', command: ${data.command} ${args}\r\n`);
 
     test.busy = true;
     const start = Date.now();
