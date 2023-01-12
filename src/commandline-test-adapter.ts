@@ -122,7 +122,7 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
       return debugConfiguration;
 
     if(this.debugActiveTest == undefined)
-      return; // Not our session to launch
+      return debugConfiguration; // Not our session to launch
 
     let data = this.testInternalData.get(this.debugActiveTest);
     if(data == undefined)
