@@ -132,6 +132,12 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
       this.log.appendLine(`Warning: 'program' field of '${debugConfiguration.name}' was not empty - it will be overwritten.`);
     debugConfiguration["program"] = data.command;
 
+    if(!isEmpty(debugConfiguration["cwd"]) && !path.isAbsolute(debugConfiguration["program"])) {
+      let oldProgram = debugConfiguration["program"];
+      debugConfiguration["program"] = this.substituteString(debugConfiguration["cwd"]) + path.sep + debugConfiguration["program"];
+      this.log.appendLine(`Prepending property cwd '${debugConfiguration["cwd"]}' to program: '${oldProgram}' -> '${debugConfiguration["program"]}'`);
+    }
+
     if(isEmpty(debugConfiguration["args"]))
       debugConfiguration["args"] = data.args;
     else
