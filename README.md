@@ -125,6 +125,7 @@ Debugging is supported via the `debugConfig` setting / property. When launching 
 
 2. The `program` and `args` properties from the to-be-launched test is copied to the debug configuration.
    * If the debug configuration property `program` is non-empty, a warning is issued.
+   * The debug configuration property `program` is changed to an absolute path (is not absolute, and `cwd` is set).
    * If the debug configuration property `args` is non-empty, it is prepended to the launch command.
 
 3. The debug session is launched.

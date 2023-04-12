@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.0
+* When launching debug sessions: The debug configuration property `program` is changed to an absolute path (is not absolute, and `cwd` is set).
+
 ## 1.1.4
  * Update log output wording.
  * Bugfix: Could not start 'normal' debugging sessions.
