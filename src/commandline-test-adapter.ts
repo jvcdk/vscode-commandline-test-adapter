@@ -6,7 +6,7 @@ import { TestRunner } from './test-runner'
 import { Constants } from './constants';
 
 export class CommandLineTestAdapter {
-  private testRunner: TestRunner | undefined = undefined;
+  private testRunners = new Set<TestRunner>();
   private testInternalData = new WeakMap<vscode.TestItem, TestInternalData>();
   private idCounter : number = 0;
   private fileWatchers : Array<vscode.FileSystemWatcher> = [];
@@ -113,10 +113,11 @@ export class CommandLineTestAdapter {
     const testRun = this.testController.createTestRun(request);
 
     let [translateNewlines] = this.getConfigBooleans(['translateNewlines']);
-    this.testRunner = new TestRunner(testRun, this.testInternalData, this.log, token, translateNewlines, await this.getCpuCount());
+    const runner = new TestRunner(testRun, this.testInternalData, this.log, token, translateNewlines, await this.getCpuCount());
+    this.testRunners.add(runner);
 
     const tests: vscode.TestItem[] = this.getTestsFromRequest(request);
-    this.testRunner.runTest(tests);
+    runner.runTest(tests).finally(() => this.testRunners.delete(runner));
   }
 
   async debugTest(request: vscode.TestRunRequest, token: vscode.CancellationToken) {
@@ -438,7 +439,8 @@ export class CommandLineTestAdapter {
   dispose(): void {
     if(this.discoveryDebounceTimer != undefined)
       clearTimeout(this.discoveryDebounceTimer);
-    this.testRunner?.dispose();
+    for(const runner of this.testRunners)
+      runner.dispose();
     this.clearFileWatchers();
   }
 }

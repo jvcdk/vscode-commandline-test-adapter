@@ -25,9 +25,9 @@ export class TestRunner {
       handle.kill();
   }
 
-  async runTest(tests: vscode.TestItem[]) {
+  runTest(tests: vscode.TestItem[]) {
     tests.forEach(test => this.testsToRun.push(test));
-    this.runQueue();
+    return this.runQueue();
   }
 
   private async runQueue()
@@ -35,29 +35,31 @@ export class TestRunner {
     const jobsRunning: Promise<vscode.TestItem>[] = []; // Must be in sync
     const testsRunning: vscode.TestItem[] = [];         // Must be in sync
 
-    while(this.testsToRun.length > 0 || jobsRunning.length > 0) {
-      while(jobsRunning.length < this.cpuCount) {
-        const test = this.testsToRun.shift();
-        if(test == undefined)
-          break;
-        testsRunning.push(test);
-        jobsRunning.push(this.doRunTest(test));
-      }
+    try {
+      while(this.testsToRun.length > 0 || jobsRunning.length > 0) {
+        while(jobsRunning.length < this.cpuCount) {
+          const test = this.testsToRun.shift();
+          if(test == undefined)
+            break;
+          testsRunning.push(test);
+          jobsRunning.push(this.doRunTest(test));
+        }
 
-      if(jobsRunning.length > 0) {
-        const test = await Promise.race(jobsRunning);
+        if(jobsRunning.length > 0) {
+          const test = await Promise.race(jobsRunning);
 
-        const index = testsRunning.indexOf(test);
-        if (index < 0)
-          this.log.appendLine("Unexpected error: Could not find test item in list of running jobs.");
-        else {
-          testsRunning.splice(index, 1);
-          jobsRunning.splice(index, 1);
+          const index = testsRunning.indexOf(test);
+          if (index < 0)
+            this.log.appendLine("Unexpected error: Could not find test item in list of running jobs.");
+          else {
+            testsRunning.splice(index, 1);
+            jobsRunning.splice(index, 1);
+          }
         }
       }
+    } finally {
+      this.testRunInstance.end();
     }
-
-    this.testRunInstance.end();
   }
 
   private async doRunTest(test:vscode.TestItem) : Promise<vscode.TestItem> {
