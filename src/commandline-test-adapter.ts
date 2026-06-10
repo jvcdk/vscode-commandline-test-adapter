@@ -225,7 +225,7 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
     let [cpuCountStr, testFolder] = this.getConfigStrings(['cpuCount', 'testFolder']);
     let cpuCount = +cpuCountStr;
     if(!isNaN(cpuCount))
-      return cpuCount;
+      return Math.max(1, Math.floor(cpuCount));
 
     cpuCount = 1;
     await runExternalProcess(cpuCountStr, [], testFolder, /* translateNewlines */ true, /* mergeStderrToStdout */ false).then((result) => {
@@ -236,8 +236,10 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
           this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr} returned no output.`);
         else {
           cpuCount = +result.stdOut;
-          if(isNaN(cpuCount))
+          if(isNaN(cpuCount)) {
             this.log.appendLine(`Detecting number of CPUs via ${cpuCountStr}: Not an int: ${result.stdOut}`);
+            cpuCount = 1;
+          }
         }
       }
       else {
@@ -248,7 +250,7 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
         }
       }
     }).catch((reason) => this.log.appendLine(reason));
-    return cpuCount;
+    return Math.max(1, Math.floor(cpuCount));
   }
 
   private parseDiscoveryString(testFolder : string, text: string) {

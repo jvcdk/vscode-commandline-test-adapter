@@ -15,8 +15,6 @@ export class TestRunner {
     private readonly cpuCount: number,
   )
   {
-    if(cpuCount < 1)
-      cpuCount = 1;
   }
 
   async runTest(tests: vscode.TestItem[]) {
