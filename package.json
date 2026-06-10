@@ -47,6 +47,16 @@
     "typescript": "^3.9.10",
     "@vscode/vsce": "^2.6.6"
   },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Executes workspace-configured shell commands to discover and run tests."
+    },
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "Requires spawning local processes."
+    }
+  },
   "engines": {
     "vscode": "^1.63.0"
   },
