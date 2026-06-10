@@ -11,6 +11,9 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
   private idCounter : number = 0;
   private fileWatchers : Array<vscode.FileSystemWatcher> = [];
   private debugActiveTest? : vscode.TestItem = undefined;
+  private discoveryDebounceTimer? : ReturnType<typeof setTimeout> = undefined;
+  private discoveryInFlight : boolean = false;
+  private discoveryPending : boolean = false;
 
   constructor(
     private readonly testController: vscode.TestController,
@@ -28,9 +31,9 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
       for(const pattern of fileWatcherPatterns) {
         const relPattern = new vscode.RelativePattern(this.workspaceFolder, pattern);
         const watcher = vscode.workspace.createFileSystemWatcher(relPattern);
-        watcher.onDidCreate(uri => this.discoverTests());
-        watcher.onDidChange(uri => this.discoverTests());
-        watcher.onDidDelete(uri => this.discoverTests());
+        watcher.onDidCreate(uri => this.scheduleDiscovery());
+        watcher.onDidChange(uri => this.scheduleDiscovery());
+        watcher.onDidDelete(uri => this.scheduleDiscovery());
         this.fileWatchers.push(watcher);
       }
     }
@@ -42,7 +45,25 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
     this.fileWatchers.length = 0;
   }
 
+  // Debounce discovery so a burst of file-watcher events triggers only one run.
+  scheduleDiscovery() {
+    if(this.discoveryDebounceTimer != undefined)
+      clearTimeout(this.discoveryDebounceTimer);
+    this.discoveryDebounceTimer = setTimeout(() => {
+      this.discoveryDebounceTimer = undefined;
+      this.discoverTests();
+    }, Constants.DiscoveryDebounceMs);
+  }
+
   async discoverTests() {
+    // Never run two discovery processes at once; they only fight over shared
+    // resources (e.g. a build lock). If a request arrives while one is running,
+    // run exactly one more pass afterwards to pick up the latest changes.
+    if(this.discoveryInFlight) {
+      this.discoveryPending = true;
+      return;
+    }
+    this.discoveryInFlight = true;
     try {
       let [
         testFolder,
@@ -79,6 +100,13 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
     }
     catch(e) {
       this.log.appendLine(String(e));
+    }
+    finally {
+      this.discoveryInFlight = false;
+      if(this.discoveryPending) {
+        this.discoveryPending = false;
+        this.discoverTests();
+      }
     }
   }
 
@@ -440,6 +468,8 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
     }
 
   dispose(): void {
+    if(this.discoveryDebounceTimer != undefined)
+      clearTimeout(this.discoveryDebounceTimer);
     this.testRunner?.dispose();
     this.clearFileWatchers();
   }
