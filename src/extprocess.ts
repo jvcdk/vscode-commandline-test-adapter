@@ -14,7 +14,7 @@ import * as fs from 'fs';
   cwd: string,
   translateNewlines: boolean,
   mergeStderrToStdout: boolean
-): Promise<ExtProcessResult>
+): ExtProcessHandle
 {
   let textFilter: (text: string) => string;
   if(translateNewlines)
@@ -22,34 +22,35 @@ import * as fs from 'fs';
   else
     textFilter = (text: string) => text;
 
-  return new Promise<ExtProcessResult>((resolve, reject) => {
-    let process: child_process.ChildProcessWithoutNullStreams;
+  let child: child_process.ChildProcessWithoutNullStreams | undefined;
+
+  const result = new Promise<ExtProcessResult>((resolve, reject) => {
     try {
       if(cwd != undefined && cwd != '') {
         // Note: statSync will throw an error if path doesn't exist
         if (!fs.statSync(cwd).isDirectory())
           throw new Error(`Directory '${cwd}' does not exist`);
 
-        process = child_process.spawn( command, args, { cwd } );
+        child = child_process.spawn( command, args, { cwd } );
       }
       else
-        process = child_process.spawn( command, args );
+        child = child_process.spawn( command, args );
 
       let result = new ExtProcessResult();
       let stdOut: string[] = [];
       let stdErr: string[] = [];
 
-      process.on('error', reject);
+      child.on('error', reject);
 
-      process.stdout.setEncoding('utf8');
-      process.stderr.setEncoding('utf8');
+      child.stdout.setEncoding('utf8');
+      child.stderr.setEncoding('utf8');
 
-      process.stdout.on('data', (data: string) => stdOut.push(textFilter(data)));
+      child.stdout.on('data', (data: string) => stdOut.push(textFilter(data)));
       if(mergeStderrToStdout)
-        process.stderr.on('data', (data: string) => stdOut.push(textFilter(data)));
+        child.stderr.on('data', (data: string) => stdOut.push(textFilter(data)));
       else
-        process.stderr.on('data', (data: string) => stdErr.push(textFilter(data)));
-      process.on('close', (code) => {
+        child.stderr.on('data', (data: string) => stdErr.push(textFilter(data)));
+      child.on('close', (code) => {
         result.returnCode = code ?? 255;
         result.stdErr = stdErr.join("");
         result.stdOut = stdOut.join("");
@@ -59,6 +60,16 @@ import * as fs from 'fs';
       reject(e);
     }
   });
+
+  return {
+    result,
+    kill: () => child?.kill(),
+  };
+}
+
+export interface ExtProcessHandle {
+  result: Promise<ExtProcessResult>;
+  kill: () => void;
 }
 
 export class ExtProcessResult {

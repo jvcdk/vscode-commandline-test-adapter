@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
 import { TestInternalData } from './test-internal-data'
-import { runExternalProcess } from './extprocess';
+import { runExternalProcess, ExtProcessHandle } from './extprocess';
 
 export class TestRunner {
   private cancelRequested: boolean = false;
   private testsToRun: vscode.TestItem[] = [];
+  private activeProcesses = new Set<ExtProcessHandle>();
+  private tokenDisposable: vscode.Disposable;
 
   constructor(
     private readonly testRunInstance: vscode.TestRun,
@@ -15,6 +17,12 @@ export class TestRunner {
     private readonly cpuCount: number,
   )
   {
+    this.tokenDisposable = token.onCancellationRequested(() => this.killAll());
+  }
+
+  private killAll() {
+    for(const handle of this.activeProcesses)
+      handle.kill();
   }
 
   async runTest(tests: vscode.TestItem[]) {
@@ -76,22 +84,26 @@ export class TestRunner {
 
     test.busy = true;
     const start = Date.now();
+    const handle = runExternalProcess(data.command, data.args, data.testFolder, this.translateNewlines, /* mergeStderrToStdout */ true);
+    this.activeProcesses.add(handle);
     try {
-      await runExternalProcess(data.command, data.args, data.testFolder, this.translateNewlines, /* mergeStderrToStdout */ true).then((result) => {
-        if(result.stdOut.length > 0)
-          this.testRunInstance.appendOutput(result.stdOut);
+      const result = await handle.result;
 
-        if(result.returnCode == 0) {
-          this.testRunInstance.passed(test, Date.now() - start);
-          test.children.forEach(test => this.testsToRun.push(test))
-        }
-        else
-          this.testRunInstance.failed(test, new vscode.TestMessage("Test failed. Please see test log."), Date.now() - start);
-      });
+      if(result.stdOut.length > 0)
+        this.testRunInstance.appendOutput(result.stdOut);
+
+      if(result.returnCode == 0) {
+        this.testRunInstance.passed(test, Date.now() - start);
+        test.children.forEach(test => this.testsToRun.push(test))
+      }
+      else
+        this.testRunInstance.failed(test, new vscode.TestMessage("Test failed. Please see test log."), Date.now() - start);
     } catch(e) {
       this.testRunInstance.errored(test, new vscode.TestMessage(e.message), Date.now() - start);
       this.testRunInstance.appendOutput(e.message); // Work-around: At the moment it seems that the UI does not show message from testRunInstance.errored(...)
       this.testRunInstance.appendOutput("\r\n");
+    } finally {
+      this.activeProcesses.delete(handle);
     }
 
     test.busy = false;
@@ -100,5 +112,7 @@ export class TestRunner {
 
   public dispose(): void {
     this.cancelRequested = true;
+    this.killAll();
+    this.tokenDisposable.dispose();
   }
 }

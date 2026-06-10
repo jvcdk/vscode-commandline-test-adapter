@@ -84,7 +84,7 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
       if(Object.prototype.toString.call(discoveryCommand) != "[object String]")
         throw new Error(`Setting ${Constants.SettingsKey}.discoveryCommand should be a string.`);
 
-      await runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines, /* mergeStderrToStdout */ false).then((result) => {
+      await runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines, /* mergeStderrToStdout */ false).result.then((result) => {
         if(result.stdErr.length > 0)
           this.log.appendLine(result.stdErr);
         if(result.returnCode == 0)
@@ -228,7 +228,7 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
       return Math.max(1, Math.floor(cpuCount));
 
     cpuCount = 1;
-    await runExternalProcess(cpuCountStr, [], testFolder, /* translateNewlines */ true, /* mergeStderrToStdout */ false).then((result) => {
+    await runExternalProcess(cpuCountStr, [], testFolder, /* translateNewlines */ true, /* mergeStderrToStdout */ false).result.then((result) => {
       if(result.stdErr.length > 0)
         this.log.appendLine(result.stdErr);
       if(result.returnCode == 0) {
