@@ -222,13 +222,13 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
   }
 
   async getCpuCount(): Promise<number> {
-    let [cpuCountStr] = this.getConfigStrings(['cpuCount']);
+    let [cpuCountStr, testFolder] = this.getConfigStrings(['cpuCount', 'testFolder']);
     let cpuCount = +cpuCountStr;
     if(!isNaN(cpuCount))
       return cpuCount;
 
     cpuCount = 1;
-    await runExternalProcess(cpuCountStr, [], "", /* translateNewlines */ true, /* mergeStderrToStdout */ false).then((result) => {
+    await runExternalProcess(cpuCountStr, [], testFolder, /* translateNewlines */ true, /* mergeStderrToStdout */ false).then((result) => {
       if(result.stdErr.length > 0)
         this.log.appendLine(result.stdErr);
       if(result.returnCode == 0) {

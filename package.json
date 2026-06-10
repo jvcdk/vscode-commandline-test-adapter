@@ -75,7 +75,7 @@
       "title": "Command Line Test Adapter",
       "properties": {
         "commandLineTestAdapter.cpuCount": {
-          "description": "Maximum number of parallel test jobs to run. Number > 1: explicit count. Number <= 1: 1 job. String: Command to run to count CPUs.",
+          "description": "Maximum number of parallel test jobs to run. Number > 1: explicit count. Number <= 1: 1 job. String: Command to execute to determine CPU count (e.g. 'nproc').",
           "type": "string",
           "default": "nproc",
           "scope": "resource"
