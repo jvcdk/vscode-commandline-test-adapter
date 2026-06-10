@@ -5,12 +5,11 @@ import { TestInternalData } from './test-internal-data'
 import { TestRunner } from './test-runner'
 import { Constants } from './constants';
 
-export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider {
+export class CommandLineTestAdapter {
   private testRunner: TestRunner | undefined = undefined;
   private testInternalData = new WeakMap<vscode.TestItem, TestInternalData>();
   private idCounter : number = 0;
   private fileWatchers : Array<vscode.FileSystemWatcher> = [];
-  private debugActiveTest? : vscode.TestItem = undefined;
   private discoveryDebounceTimer? : ReturnType<typeof setTimeout> = undefined;
   private discoveryInFlight : boolean = false;
   private discoveryPending : boolean = false;
@@ -121,87 +120,54 @@ export class CommandLineTestAdapter implements vscode.DebugConfigurationProvider
   }
 
   async debugTest(request: vscode.TestRunRequest, token: vscode.CancellationToken) {
-    let [defaultDebugConfig] = this.getConfigStrings(['debugConfig']);
+    let [defaultDebugConfigName] = this.getConfigStrings(['debugConfig']);
     const tests: vscode.TestItem[] = this.getTestsFromRequest(request);
     for(let test of tests) {
       if(token.isCancellationRequested)
         return;
 
-      let [ setupOk, debugConfig ] = this.prepareDebugSession(defaultDebugConfig, test);
-      if(!setupOk)
+      let data = this.testInternalData.get(test);
+      let configName = data?.debugConfig || defaultDebugConfigName;
+      if(isEmpty(configName)) {
+        this.log.appendLine(`Could not start debugging of '${test.label}'.`);
+        this.log.appendLine(`Discovery command did not specify a debug configuration explicitly, and ${Constants.SettingsKey}.debugConfig is not set.`);
+        vscode.window.showErrorMessage(`Could not launch debug task for ${test.label}. Please see Command Line Test Adapter log window`);
         continue;
+      }
 
-      this.debugActiveTest = test; // used in resolveDebugConfiguration
+      const launchConfig = vscode.workspace.getConfiguration('launch', this.workspaceFolder.uri);
+      const configurations: vscode.DebugConfiguration[] = launchConfig.get('configurations') || [];
+      const baseConfig = configurations.find(c => c.name === configName);
+      if(baseConfig == undefined) {
+        this.log.appendLine(`Debug configuration '${configName}' not found in launch.json.`);
+        vscode.window.showErrorMessage(`Debug configuration '${configName}' not found in launch.json.`);
+        continue;
+      }
+
+      const debugConfig = { ...baseConfig };
+
+      if(data == undefined) {
+        this.log.appendLine(`Error: Could not find internal data for test ${test.label}.`);
+        continue;
+      }
+
+      if(!isEmpty(debugConfig["program"]))
+        this.log.appendLine(`Warning: 'program' field of '${debugConfig.name}' was not empty - it will be overwritten.`);
+      debugConfig["program"] = data.command;
+      debugConfig["args"] = [...(debugConfig["args"] ?? []), ...data.args];
+
+      let args = debugConfig["args"].map((arg: string) => `"${arg}"`).join(" ");
+      this.log.appendLine(`Launching debug session '${test.label}', command: ${debugConfig["program"]} ${args}`);
+
       await vscode.debug.startDebugging(this.workspaceFolder, debugConfig)
         .then(
-          result => {}, // Do nothing
+          result => {},
           reason => {
             this.log.appendLine(`Could not start debugging of '${test.label}'.`);
             this.log.appendLine(reason);
           }
         );
-
-      this.debugActiveTest = undefined; // Mark that we are exited launch-mode
     }
-  }
-
-  resolveDebugConfiguration?(folder: vscode.WorkspaceFolder | undefined, debugConfiguration: vscode.DebugConfiguration, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration> {
-    if(token?.isCancellationRequested)
-      return debugConfiguration;
-
-    if(this.debugActiveTest == undefined)
-      return debugConfiguration; // Not our session to launch
-
-    let data = this.testInternalData.get(this.debugActiveTest);
-    if(data == undefined)
-      throw new Error("Unexpected error: Internal data object not found.");
-
-    if(!isEmpty(debugConfiguration["program"]))
-      this.log.appendLine(`Warning: 'program' field of '${debugConfiguration.name}' was not empty - it will be overwritten.`);
-    debugConfiguration["program"] = data.command;
-
-    if(!isEmpty(debugConfiguration["cwd"]) && !path.isAbsolute(debugConfiguration["program"])) {
-      let oldProgram = debugConfiguration["program"];
-      debugConfiguration["program"] = this.substituteString(debugConfiguration["cwd"]) + path.sep + debugConfiguration["program"];
-      this.log.appendLine(`Prepending property cwd '${debugConfiguration["cwd"]}' to program: '${oldProgram}' -> '${debugConfiguration["program"]}'`);
-    }
-
-    if(isEmpty(debugConfiguration["args"]))
-      debugConfiguration["args"] = data.args;
-    else
-      debugConfiguration["args"] = debugConfiguration["args"].concat(data.args);
-
-    return debugConfiguration;
-  }
-
-  resolveDebugConfigurationWithSubstitutedVariables(folder: vscode.WorkspaceFolder | undefined, debugConfiguration: vscode.DebugConfiguration, token?: vscode.CancellationToken | undefined): vscode.ProviderResult<vscode.DebugConfiguration> {
-    if(this.debugActiveTest != undefined) {
-      let args = debugConfiguration['args'].map((arg: string) => `"${arg}"`).join(" ");
-      let command = debugConfiguration['program'];
-      this.log.appendLine(`Launching debug session '${this.debugActiveTest.label}', command: ${command} ${args}`);
-    }
-
-    return debugConfiguration;
-  }
-
-  private prepareDebugSession(defaultDebugConfig: string, test: vscode.TestItem) : [ boolean, string ] {
-    let data = this.testInternalData.get(test);
-    let setupOk = true;
-    let debugConfig = data?.debugConfig || defaultDebugConfig;
-    if (isEmpty(debugConfig)) {
-      this.log.appendLine(`Could not start debugging of '${test.label}'.`);
-      this.log.appendLine(`Discovery command did not specify a debug configuration explicitly, and ${Constants.SettingsKey}.debugConfig is not set.`);
-      setupOk = false;
-    }
-
-    if (this.debugActiveTest != undefined) {
-      this.log.appendLine(`Unexpected error: Trying to launch '${test.label}' while '${this.debugActiveTest.label}' is already in the process of launching.`);
-      setupOk = false;
-    }
-    if(!setupOk)
-      vscode.window.showErrorMessage(`Could not launch debug task for ${test.label}. Please see Command Line Test Adapter log window`);
-
-    return [ setupOk, debugConfig ];
   }
 
   private getTestsFromRequest(request: vscode.TestRunRequest) : vscode.TestItem[] {

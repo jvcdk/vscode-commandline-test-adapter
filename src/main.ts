@@ -33,7 +33,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const command = Constants.Id + '.rediscoverTests';
   context.subscriptions.push(vscode.commands.registerCommand(command, () => adapter.discoverTests()));
-  context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider("*", adapter));
 
   adapter.setupFileWatchers();
 
