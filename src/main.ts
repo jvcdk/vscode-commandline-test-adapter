@@ -36,13 +36,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
   adapter.setupFileWatchers();
 
-  vscode.workspace.onDidChangeConfiguration((ev) => {
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((ev) => {
     if(ev.affectsConfiguration(Constants.SettingsKey + ".discoveryCommand") || ev.affectsConfiguration(Constants.SettingsKey + ".discoveryArgs"))
       adapter.discoverTests();
 
     if(ev.affectsConfiguration(Constants.SettingsKey + ".watch"))
       adapter.setupFileWatchers();
-  });
+  }));
 }
 
 export function deactivate() {}
