@@ -112,6 +112,8 @@ Environments variables are prefixed with `env:`. For example `${env:HOME}` will 
 
 Note, Windows: Variable names are case insensitive but must be uppercase for `env:` substitution to work properly.
 
+**Security note:** Configured commands run with the full environment of the VS Code process. The `${env:...}` substitution can reference any environment variable available to the extension host. This extension requires a trusted workspace (see Workspace Trust) and should not be used with untrusted workspace configurations.
+
 
 ## Debugging
 
