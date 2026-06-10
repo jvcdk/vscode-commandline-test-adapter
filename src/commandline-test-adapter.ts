@@ -171,17 +171,17 @@ export class CommandLineTestAdapter {
   }
 
   private getTestsFromRequest(request: vscode.TestRunRequest) : vscode.TestItem[] {
+    const excluded = new Set(request.exclude ?? []);
     const tests: vscode.TestItem[] = [];
     if (request.include == undefined) {
       this.testController.items.forEach(test => {
-        if (request.exclude?.indexOf(test) != -1)
-          return;
-        tests.push(test);
+        if (!excluded.has(test))
+          tests.push(test);
       });
     }
     else {
       request.include
-        .filter(test => request.exclude?.indexOf(test) == -1)
+        .filter(test => !excluded.has(test))
         .forEach(test => tests.push(test));
     }
     return tests;
