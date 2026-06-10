@@ -35,23 +35,22 @@ import * as fs from 'fs';
       else
         process = child_process.spawn( command, args );
 
-      // Something failed, e.g. the executable or cwd doesn't exist
-      if (!process.pid)
-        throw new Error(`Cannot launch command '${command}'`);
-
       let result = new ExtProcessResult();
       let stdOut: string[] = [];
       let stdErr: string[] = [];
-      process.stdout.on('data', (data: string) => stdOut.push(textFilter(String(data))));
+
+      process.on('error', reject);
+
+      process.stdout.setEncoding('utf8');
+      process.stderr.setEncoding('utf8');
+
+      process.stdout.on('data', (data: string) => stdOut.push(textFilter(data)));
       if(mergeStderrToStdout)
-        process.stderr.on('data', (data: string) => stdOut.push(textFilter(String(data))));
+        process.stderr.on('data', (data: string) => stdOut.push(textFilter(data)));
       else
-        process.stderr.on('data', (data: string) => stdErr.push(textFilter(String(data))));
-      process.on('exit', (code) => {
-        if(code === null)
-          result.returnCode = 255;
-        else
-          result.returnCode = code;
+        process.stderr.on('data', (data: string) => stdErr.push(textFilter(data)));
+      process.on('close', (code) => {
+        result.returnCode = code ?? 255;
         result.stdErr = stdErr.join("");
         result.stdOut = stdOut.join("");
         resolve(result);
