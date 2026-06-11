@@ -91,17 +91,27 @@ export class TestRunner {
         this.testRunInstance.passed(test, Date.now() - start);
         test.children.forEach(test => this.testsToRun.push(test))
       }
-      else
+      else {
         this.testRunInstance.failed(test, new vscode.TestMessage("Test failed. Please see test log."), Date.now() - start);
+        this.skipChildren(test);
+      }
     } catch(e) {
       this.testRunInstance.errored(test, new vscode.TestMessage(e.message), Date.now() - start);
       this.testRunInstance.appendOutput(e.message); // Work-around: At the moment it seems that the UI does not show message from testRunInstance.errored(...)
       this.testRunInstance.appendOutput("\r\n");
+      this.skipChildren(test);
     } finally {
       this.activeProcesses.delete(handle);
     }
 
     test.busy = false;
+  }
+
+  private skipChildren(test: vscode.TestItem) {
+    test.children.forEach(child => {
+      this.testRunInstance.skipped(child);
+      this.skipChildren(child);
+    });
   }
 
   public dispose(): void {
