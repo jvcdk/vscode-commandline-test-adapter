@@ -27,9 +27,8 @@ import * as fs from 'fs';
   const result = new Promise<ExtProcessResult>((resolve, reject) => {
     try {
       if(cwd != undefined && cwd != '') {
-        // Note: statSync will throw an error if path doesn't exist
         if (!fs.statSync(cwd).isDirectory())
-          throw new Error(`Directory '${cwd}' does not exist`);
+          throw new Error(`'${cwd}' is not a directory`);
 
         child = child_process.spawn( command, args, { cwd } );
       }

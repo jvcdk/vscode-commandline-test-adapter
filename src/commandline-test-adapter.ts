@@ -27,7 +27,7 @@ export class CommandLineTestAdapter {
     this.clearFileWatchers();
 
     let [fileWatcherPatterns] = this.getConfigArrays(['watch']);
-    if(Object.prototype.toString.call(fileWatcherPatterns) == "[object Array]" && fileWatcherPatterns.length > 0) {
+    if(Array.isArray(fileWatcherPatterns) && fileWatcherPatterns.length > 0) {
       for(const pattern of fileWatcherPatterns) {
         const relPattern = new vscode.RelativePattern(this.workspaceFolder, pattern);
         const watcher = vscode.workspace.createFileSystemWatcher(relPattern);
@@ -86,7 +86,7 @@ export class CommandLineTestAdapter {
       if(discoveryCommand == "")
         throw new Error(`Missing discovery command. Please set in settings: ${Constants.SettingsKey}.discoveryCommand`);
 
-      if(Object.prototype.toString.call(discoveryCommand) != "[object String]")
+      if(typeof discoveryCommand !== "string")
         throw new Error(`Setting ${Constants.SettingsKey}.discoveryCommand should be a string.`);
 
       await runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines, /* mergeStderrToStdout */ false).result.then((result) => {
@@ -234,7 +234,7 @@ export class CommandLineTestAdapter {
   private parseDiscoveryString(testFolder : string, text: string) {
     try {
       const data = JSON.parse(text);
-      if(Object.prototype.toString.call(data) === '[object Array]') {
+      if(Array.isArray(data)) {
         const newTestData = new WeakMap<vscode.TestItem, TestInternalData>();
         this.parseDiscoveryData(testFolder, data, this.testController.items, newTestData);
         this.testInternalData = newTestData;
@@ -272,7 +272,7 @@ export class CommandLineTestAdapter {
       if(idx >= 0)
         existingTests.splice(idx, 1);
 
-      if (Object.prototype.toString.call(testCase.children) === '[object Array]')
+      if (Array.isArray(testCase.children))
         this.parseDiscoveryData(testFolder, testCase.children, test.children, testData);
     });
 
@@ -310,10 +310,9 @@ export class CommandLineTestAdapter {
 
     if (!isEmpty(testCase.command)) {
       let args: string[] = [];
-      let argsType = Object.prototype.toString.call(testCase.args);
-      if (argsType === '[object Array]')
+      if (Array.isArray(testCase.args))
         testCase.args.forEach((arg: string) => args.push(arg));
-      else if (argsType === '[object String]')
+      else if (typeof testCase.args === 'string')
         args.push(testCase.args);
 
       internalData.command = this.substituteString(testCase.command);
@@ -321,11 +320,10 @@ export class CommandLineTestAdapter {
     }
 
     if(!isEmpty(testCase.debugConfig)) {
-      let debugConfigType = Object.prototype.toString.call(testCase.debugConfig);
-      if(debugConfigType === '[object String]')
+      if(typeof testCase.debugConfig === 'string')
         internalData.debugConfig = testCase.debugConfig;
       else
-        this.log.appendLine(`Unsupported object type '${debugConfigType}' for property 'debugConfig' on test case '${test.label}'.`);
+        this.log.appendLine(`Unsupported type '${typeof testCase.debugConfig}' for property 'debugConfig' on test case '${test.label}'.`);
     }
 
     return test;
@@ -428,9 +426,7 @@ export class CommandLineTestAdapter {
   private substituteStrArray(strs: string[])
   {
     const varMap = this.getVariableSubstitutionMap();
-    for(var idx = 0; idx < strs.length; idx++)
-      strs[idx] = substituteString(strs[idx], varMap);
-      return strs;
+    return strs.map(str => substituteString(str, varMap));
   }
 
   /**
@@ -474,13 +470,11 @@ export class CommandLineTestAdapter {
  */
 function substituteString(str: string, varMap: Map<string, string>) {
   varMap.forEach((value, key) => {
-    while (str.indexOf(key) > -1) {
-      str = str.replace(key, value);
-    }
+    str = str.split(key).join(value);
   });
   return str;
-};
+}
 
 function isEmpty(value: any) {
-  return value == undefined || value == null  || value == "";
+  return value === undefined || value === null || value === "";
 }
