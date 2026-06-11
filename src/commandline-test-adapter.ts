@@ -94,11 +94,16 @@ export class CommandLineTestAdapter {
             this.log.appendLine(`Stdout:`);
             this.log.appendLine(result.stdOut);
           }
+          this.showDiscoveryError(`Discovery command exited with code ${result.returnCode}.`);
         }
-      }).catch((reason) => this.log.appendLine(reason));
+      }).catch((reason) => {
+        this.log.appendLine(reason);
+        this.showDiscoveryError(`Discovery command failed: ${reason}`);
+      });
     }
     catch(e) {
       this.log.appendLine(String(e));
+      this.showDiscoveryError(String(e));
     }
     finally {
       this.discoveryInFlight = false;
@@ -233,6 +238,7 @@ export class CommandLineTestAdapter {
         this.log.appendLine("Please see documentation for supported data structure.");
         this.log.appendLine("Received data:");
         this.log.appendLine(text);
+        this.showDiscoveryError("Discovery command returned unexpected data format.");
       }
     }
     catch(e) {
@@ -241,6 +247,7 @@ export class CommandLineTestAdapter {
       this.log.appendLine(String(e));
       this.log.appendLine("Received data:");
       this.log.appendLine(text);
+      this.showDiscoveryError("Failed to parse discovery output as JSON.");
     }
   }
 
@@ -434,6 +441,13 @@ export class CommandLineTestAdapter {
       let configArr = config.get<Array<string>>(key) || [];
       return this.substituteStrArray(configArr);
     }
+
+  private showDiscoveryError(message: string) {
+    vscode.window.showErrorMessage(message, 'Open Log').then(action => {
+      if(action === 'Open Log')
+        this.log.show();
+    });
+  }
 
   dispose(): void {
     if(this.discoveryDebounceTimer != undefined)
