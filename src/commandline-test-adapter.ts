@@ -13,6 +13,7 @@ export class CommandLineTestAdapter {
   private discoveryDebounceTimer? : ReturnType<typeof setTimeout> = undefined;
   private discoveryInFlight : boolean = false;
   private discoveryPending : boolean = false;
+  private discoveryPromise : Promise<void> = Promise.resolve();
 
   constructor(
     private readonly testController: vscode.TestController,
@@ -54,15 +55,20 @@ export class CommandLineTestAdapter {
     }, Constants.DiscoveryDebounceMs);
   }
 
-  async discoverTests() {
+  discoverTests(): Promise<void> {
     // Never run two discovery processes at once; they only fight over shared
     // resources (e.g. a build lock). If a request arrives while one is running,
     // run exactly one more pass afterwards to pick up the latest changes.
     if(this.discoveryInFlight) {
       this.discoveryPending = true;
-      return;
+      return this.discoveryPromise;
     }
     this.discoveryInFlight = true;
+    this.discoveryPromise = this.doDiscoverTests();
+    return this.discoveryPromise;
+  }
+
+  private async doDiscoverTests() {
     try {
       let [
         testFolder,
@@ -109,7 +115,7 @@ export class CommandLineTestAdapter {
       this.discoveryInFlight = false;
       if(this.discoveryPending) {
         this.discoveryPending = false;
-        this.discoverTests();
+        await this.discoverTests();
       }
     }
   }
