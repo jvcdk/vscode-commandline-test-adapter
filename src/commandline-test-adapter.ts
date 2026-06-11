@@ -224,10 +224,10 @@ export class CommandLineTestAdapter {
     try {
       const data = JSON.parse(text);
       if(Object.prototype.toString.call(data) === '[object Array]') {
-        this.testInternalData = new WeakMap<vscode.TestItem, TestInternalData>();
-        this.parseDiscoveryData(testFolder, data, this.testController.items);
+        const newTestData = new WeakMap<vscode.TestItem, TestInternalData>();
+        this.parseDiscoveryData(testFolder, data, this.testController.items, newTestData);
+        this.testInternalData = newTestData;
       }
-
       else {
         this.log.appendLine("Got unexpected json data from discover command.");
         this.log.appendLine("Please see documentation for supported data structure.");
@@ -244,7 +244,7 @@ export class CommandLineTestAdapter {
     }
   }
 
-  private parseDiscoveryData(testFolder: string, tests: any[], collection: vscode.TestItemCollection) {
+  private parseDiscoveryData(testFolder: string, tests: any[], collection: vscode.TestItemCollection, testData: WeakMap<vscode.TestItem, TestInternalData>) {
     let existingTests: string[] = [];
     collection.forEach(existing => existingTests.push(existing.id));
 
@@ -254,13 +254,13 @@ export class CommandLineTestAdapter {
         return;
       }
 
-      var test = this.processTestCase(testFolder, testCase, collection);
+      var test = this.processTestCase(testFolder, testCase, collection, testData);
       let idx = existingTests.indexOf(test.id);
       if(idx >= 0)
         existingTests.splice(idx, 1);
 
       if (Object.prototype.toString.call(testCase.children) === '[object Array]')
-        this.parseDiscoveryData(testFolder, testCase.children, test.children);
+        this.parseDiscoveryData(testFolder, testCase.children, test.children, testData);
     });
 
     existingTests.forEach(removedTest => {
@@ -268,11 +268,10 @@ export class CommandLineTestAdapter {
       if(instance == undefined)
         return;
       collection.delete(removedTest);
-      this.testInternalData.delete(instance)
     });
   }
 
-  private processTestCase(testFolder: string, testCase: any, collection: vscode.TestItemCollection) : vscode.TestItem {
+  private processTestCase(testFolder: string, testCase: any, collection: vscode.TestItemCollection, testData: WeakMap<vscode.TestItem, TestInternalData>) : vscode.TestItem {
     let instanceTestFolder = testFolder;
     if (!isEmpty(testCase.testFolder))
       instanceTestFolder = this.substituteString(testCase.testFolder);
@@ -287,7 +286,7 @@ export class CommandLineTestAdapter {
       uri = vscode.Uri.file(file);
     }
 
-    let [test, internalData] = this.GetCreateVsCodeTestCase(collection, testCase.label, uri);
+    let [test, internalData] = this.getOrCreateTestCase(collection, testCase.label, uri, testData);
 
     internalData.testFolder = instanceTestFolder;
 
@@ -319,7 +318,7 @@ export class CommandLineTestAdapter {
     return test;
   }
 
-  private GetCreateVsCodeTestCase(collection: vscode.TestItemCollection, label: string, uri: vscode.Uri | undefined): [vscode.TestItem, TestInternalData] {
+  private getOrCreateTestCase(collection: vscode.TestItemCollection, label: string, uri: vscode.Uri | undefined, testData: WeakMap<vscode.TestItem, TestInternalData>): [vscode.TestItem, TestInternalData] {
     let test: vscode.TestItem | undefined = undefined;
     collection.forEach((entry: vscode.TestItem) => {
       if(entry.label == label && entry.uri?.path == uri?.path)
@@ -331,10 +330,10 @@ export class CommandLineTestAdapter {
       collection.add(test);
     }
 
-    let internalData = this.testInternalData.get(test);
+    let internalData = testData.get(test);
     if(internalData == undefined) {
       internalData = new TestInternalData();
-      this.testInternalData.set(test, internalData);
+      testData.set(test, internalData);
     }
 
     return [test, internalData];
