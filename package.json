@@ -35,10 +35,6 @@
     "package": "vsce package",
     "publish": "vsce publish"
   },
-  "dependencies": {
-    "split-cmd": "^1.0.1",
-    "split2": "^3.2.2"
-  },
   "devDependencies": {
     "@types/vscode": "^1.63.0",
     "prettier": "^2.4.1",
