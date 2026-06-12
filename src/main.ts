@@ -26,7 +26,7 @@ function tryInitialize(context: vscode.ExtensionContext) {
 
   initialized = true;
 
-  const log = vscode.window.createOutputChannel(Constants.Name);
+  const log = vscode.window.createOutputChannel(Constants.Name, { log: true });
   context.subscriptions.push(log);
 
   const controller = vscode.tests.createTestController(Constants.Id, Constants.Name);

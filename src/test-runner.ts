@@ -11,7 +11,7 @@ export class TestRunner {
   constructor(
     private readonly testRunInstance: vscode.TestRun,
     private readonly testData: WeakMap<vscode.TestItem, TestInternalData>,
-    private readonly log: vscode.OutputChannel,
+    private readonly log: vscode.LogOutputChannel,
     private readonly token: vscode.CancellationToken,
     private readonly translateNewlines: boolean,
     private readonly cpuCount: number,
@@ -66,7 +66,7 @@ export class TestRunner {
 
     const data = this.testData.get(test);
     if(data == undefined) {
-      this.log.appendLine(`Error: Could not find internal data for test ${test.label}.`);
+      this.log.error(`Could not find internal data for test ${test.label}.`);
       this.testRunInstance.failed(test, new vscode.TestMessage(`Error: Could not find internal data for test ${test.label}.`));
       return;
     }

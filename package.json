@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/vscode": "~1.67.0",
+    "@types/vscode": "~1.74.0",
     "@typescript-eslint/eslint-plugin": "^8.61.0",
     "@typescript-eslint/parser": "^8.61.0",
     "@vscode/vsce": "^2.6.6",
@@ -59,7 +59,7 @@
     }
   },
   "engines": {
-    "vscode": "^1.67.0"
+    "vscode": "^1.74.0"
   },
   "activationEvents": [
     "onStartupFinished"
