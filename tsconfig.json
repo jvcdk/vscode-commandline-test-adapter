@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "lib": [ "es2020" ],
+    "target": "es2022",
+    "lib": [ "es2022" ],
     "module": "commonjs",
+    "rootDir": "src",
     "outDir": "out",
     "sourceMap": true,
     "strict": true,
@@ -12,7 +13,6 @@
     "skipLibCheck": true
   },
   "include": [
-    "src/main.ts"
+    "src"
   ]
 }
-  
