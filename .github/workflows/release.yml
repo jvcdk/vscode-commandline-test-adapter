@@ -19,3 +19,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "${{ github.ref_name }}" *.vsix --generate-notes
+      - name: Publish to VS Code Marketplace
+        env:
+          # Note to future self: Generate new token here: https://dev.azure.com/jvcdk-at-github/
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: bunx @vscode/vsce publish --no-dependencies
