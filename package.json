@@ -77,7 +77,7 @@
       "properties": {
         "commandLineTestAdapter.cpuCount": {
           "description": "Maximum number of parallel test jobs to run. Number > 1: explicit count. Number <= 1: 1 job. String: Command to execute to determine CPU count (e.g. 'nproc').",
-          "type": "string",
+          "type": ["string", "integer"],
           "default": "nproc",
           "scope": "resource"
         },
@@ -90,6 +90,8 @@
         "commandLineTestAdapter.discoveryArgs": {
           "description": "Array of arguments to discovery command.",
           "type": "array",
+          "items": { "type": "string" },
+          "default": [],
           "scope": "resource"
         },
         "commandLineTestAdapter.discoveryCommand": {
@@ -104,7 +106,7 @@
           "default": "${workspaceFolder}"
         },
         "commandLineTestAdapter.translateNewlines": {
-          "description": "Translate newlines from '\n' to '\r\n' needed for terminal output.",
+          "description": "Translate newlines from \\n to \\r\\n needed for terminal output.",
           "type": "boolean",
           "scope": "resource",
           "default": true
@@ -112,6 +114,8 @@
         "commandLineTestAdapter.watch": {
           "description": "Array of file patterns to watch to update the tests (re-run the discovery command).",
           "type": "array",
+          "items": { "type": "string" },
+          "default": [],
           "scope": "resource"
         }
       }
