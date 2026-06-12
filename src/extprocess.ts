@@ -35,9 +35,9 @@ import * as fs from 'fs';
       else
         child = child_process.spawn( command, args );
 
-      let result = new ExtProcessResult();
-      let stdOut: string[] = [];
-      let stdErr: string[] = [];
+      const result = new ExtProcessResult();
+      const stdOut: string[] = [];
+      const stdErr: string[] = [];
 
       child.on('error', reject);
 

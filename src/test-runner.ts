@@ -64,7 +64,7 @@ export class TestRunner {
       return;
     }
 
-    let data = this.testData.get(test);
+    const data = this.testData.get(test);
     if(data == undefined) {
       this.log.appendLine(`Error: Could not find internal data for test ${test.label}.`);
       this.testRunInstance.failed(test, new vscode.TestMessage(`Error: Could not find internal data for test ${test.label}.`));
@@ -79,7 +79,7 @@ export class TestRunner {
 
     this.testRunInstance.started(test);
 
-    let args = data.args.map(arg => `"${arg}"`).join(" ");
+    const args = data.args.map(arg => `"${arg}"`).join(" ");
     this.testRunInstance.appendOutput(`Running test '${test.label}', command: ${data.command} ${args}\r\n`);
     const start = Date.now();
     const handle = runExternalProcess(data.command, data.args, data.testFolder, this.translateNewlines, /* mergeStderrToStdout */ true);

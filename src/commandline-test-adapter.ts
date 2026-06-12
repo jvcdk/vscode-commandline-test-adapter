@@ -26,14 +26,14 @@ export class CommandLineTestAdapter {
   setupFileWatchers() {
     this.clearFileWatchers();
 
-    let [fileWatcherPatterns] = this.getConfigArrays(['watch']);
+    const [fileWatcherPatterns] = this.getConfigArrays(['watch']);
     if(Array.isArray(fileWatcherPatterns) && fileWatcherPatterns.length > 0) {
       for(const pattern of fileWatcherPatterns) {
         const relPattern = new vscode.RelativePattern(this.workspaceFolder, pattern);
         const watcher = vscode.workspace.createFileSystemWatcher(relPattern);
-        watcher.onDidCreate(uri => this.scheduleDiscovery());
-        watcher.onDidChange(uri => this.scheduleDiscovery());
-        watcher.onDidDelete(uri => this.scheduleDiscovery());
+        watcher.onDidCreate(() => this.scheduleDiscovery());
+        watcher.onDidChange(() => this.scheduleDiscovery());
+        watcher.onDidDelete(() => this.scheduleDiscovery());
         this.fileWatchers.push(watcher);
       }
     }
@@ -70,15 +70,10 @@ export class CommandLineTestAdapter {
 
   private async doDiscoverTests() {
     try {
-      let [
-        testFolder,
-        discoveryCommand,
-      ] = this.getConfigStrings([
-        'testFolder',
-        'discoveryCommand',
-      ]);
-      let [discoveryArgs] = this.getConfigArrays(['discoveryArgs']);
-      let [translateNewlines] = this.getConfigBooleans(['translateNewlines']);
+      const [discoveryCommand] = this.getConfigStrings(['discoveryCommand']);
+      let [testFolder] = this.getConfigStrings(['testFolder']);
+      const [discoveryArgs] = this.getConfigArrays(['discoveryArgs']);
+      const [translateNewlines] = this.getConfigBooleans(['translateNewlines']);
 
       if(testFolder == undefined || testFolder == "")
         testFolder = this.workspaceFolder.uri.fsPath;
@@ -123,7 +118,7 @@ export class CommandLineTestAdapter {
   async runTest(request: vscode.TestRunRequest, token: vscode.CancellationToken) {
     const testRun = this.testController.createTestRun(request);
 
-    let [translateNewlines] = this.getConfigBooleans(['translateNewlines']);
+    const [translateNewlines] = this.getConfigBooleans(['translateNewlines']);
     const runner = new TestRunner(testRun, this.testInternalData, this.log, token, translateNewlines, await this.getCpuCount());
     this.testRunners.add(runner);
 
@@ -132,14 +127,14 @@ export class CommandLineTestAdapter {
   }
 
   async debugTest(request: vscode.TestRunRequest, token: vscode.CancellationToken) {
-    let [defaultDebugConfigName] = this.getConfigStrings(['debugConfig']);
+    const [defaultDebugConfigName] = this.getConfigStrings(['debugConfig']);
     const tests: vscode.TestItem[] = this.getTestsFromRequest(request);
-    for(let test of tests) {
+    for(const test of tests) {
       if(token.isCancellationRequested)
         return;
 
-      let data = this.testInternalData.get(test);
-      let configName = data?.debugConfig || defaultDebugConfigName;
+      const data = this.testInternalData.get(test);
+      const configName = data?.debugConfig || defaultDebugConfigName;
       if(isEmpty(configName)) {
         this.log.appendLine(`Could not start debugging of '${test.label}'.`);
         this.log.appendLine(`Discovery command did not specify a debug configuration explicitly, and ${Constants.SettingsKey}.debugConfig is not set.`);
@@ -168,12 +163,12 @@ export class CommandLineTestAdapter {
       debugConfig["program"] = data.command;
       debugConfig["args"] = [...(debugConfig["args"] ?? []), ...data.args];
 
-      let args = debugConfig["args"].map((arg: string) => `"${arg}"`).join(" ");
+      const args = debugConfig["args"].map((arg: string) => `"${arg}"`).join(" ");
       this.log.appendLine(`Launching debug session '${test.label}', command: ${debugConfig["program"]} ${args}`);
 
       await vscode.debug.startDebugging(this.workspaceFolder, debugConfig)
         .then(
-          result => {},
+          () => {},
           reason => {
             this.log.appendLine(`Could not start debugging of '${test.label}'.`);
             this.log.appendLine(reason);
@@ -200,7 +195,7 @@ export class CommandLineTestAdapter {
   }
 
   async getCpuCount(): Promise<number> {
-    let [cpuCountStr, testFolder] = this.getConfigStrings(['cpuCount', 'testFolder']);
+    const [cpuCountStr, testFolder] = this.getConfigStrings(['cpuCount', 'testFolder']);
     let cpuCount = +cpuCountStr;
     if(!isNaN(cpuCount))
       return Math.max(1, Math.floor(cpuCount));
@@ -257,8 +252,9 @@ export class CommandLineTestAdapter {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private parseDiscoveryData(testFolder: string, tests: any[], collection: vscode.TestItemCollection, testData: WeakMap<vscode.TestItem, TestInternalData>) {
-    let existingTests: string[] = [];
+    const existingTests: string[] = [];
     collection.forEach(existing => existingTests.push(existing.id));
 
     tests.forEach(testCase => {
@@ -267,8 +263,8 @@ export class CommandLineTestAdapter {
         return;
       }
 
-      var test = this.processTestCase(testFolder, testCase, collection, testData);
-      let idx = existingTests.indexOf(test.id);
+      const test = this.processTestCase(testFolder, testCase, collection, testData);
+      const idx = existingTests.indexOf(test.id);
       if(idx >= 0)
         existingTests.splice(idx, 1);
 
@@ -277,13 +273,14 @@ export class CommandLineTestAdapter {
     });
 
     existingTests.forEach(removedTest => {
-      let instance = collection.get(removedTest);
+      const instance = collection.get(removedTest);
       if(instance == undefined)
         return;
       collection.delete(removedTest);
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private processTestCase(testFolder: string, testCase: any, collection: vscode.TestItemCollection, testData: WeakMap<vscode.TestItem, TestInternalData>) : vscode.TestItem {
     let instanceTestFolder = testFolder;
     if (!isEmpty(testCase.testFolder))
@@ -299,7 +296,7 @@ export class CommandLineTestAdapter {
       uri = vscode.Uri.file(file);
     }
 
-    let [test, internalData] = this.getOrCreateTestCase(collection, testCase.label, uri, testData);
+    const [test, internalData] = this.getOrCreateTestCase(collection, testCase.label, uri, testData);
 
     internalData.testFolder = instanceTestFolder;
 
@@ -309,7 +306,7 @@ export class CommandLineTestAdapter {
     }
 
     if (!isEmpty(testCase.command)) {
-      let args: string[] = [];
+      const args: string[] = [];
       if (Array.isArray(testCase.args))
         testCase.args.forEach((arg: string) => args.push(arg));
       else if (typeof testCase.args === 'string')
@@ -440,7 +437,7 @@ export class CommandLineTestAdapter {
       config: vscode.WorkspaceConfiguration,
       key: string
     ) {
-      let configArr = config.get<Array<string>>(key) || [];
+      const configArr = config.get<Array<string>>(key) || [];
       return this.substituteStrArray(configArr);
     }
 
@@ -475,6 +472,6 @@ function substituteString(str: string, varMap: Map<string, string>) {
   return str;
 }
 
-function isEmpty(value: any) {
+function isEmpty(value: unknown) {
   return value === undefined || value === null || value === "";
 }
