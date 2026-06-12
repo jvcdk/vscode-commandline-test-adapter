@@ -26,7 +26,10 @@ export class TestRunner {
   }
 
   runTest(tests: vscode.TestItem[]) {
-    tests.forEach(test => this.testsToRun.push(test));
+    tests.forEach(test => {
+      this.testsToRun.push(test);
+      this.testRunInstance.enqueued(test);
+    });
     return this.runQueue();
   }
 
@@ -74,10 +77,10 @@ export class TestRunner {
       return;
     }
 
+    this.testRunInstance.started(test);
+
     let args = data.args.map(arg => `"${arg}"`).join(" ");
     this.testRunInstance.appendOutput(`Running test '${test.label}', command: ${data.command} ${args}\r\n`);
-
-    test.busy = true;
     const start = Date.now();
     const handle = runExternalProcess(data.command, data.args, data.testFolder, this.translateNewlines, /* mergeStderrToStdout */ true);
     this.activeProcesses.add(handle);
@@ -104,8 +107,6 @@ export class TestRunner {
     } finally {
       this.activeProcesses.delete(handle);
     }
-
-    test.busy = false;
   }
 
   private skipChildren(test: vscode.TestItem) {
