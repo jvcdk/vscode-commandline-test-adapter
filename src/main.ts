@@ -28,6 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(adapter);
 
   controller.resolveHandler = () => adapter.discoverTests();
+  controller.refreshHandler = () => adapter.discoverTests();
   controller.createRunProfile('Run', vscode.TestRunProfileKind.Run, (request, token) => adapter.runTest(request, token));
   controller.createRunProfile('Debug', vscode.TestRunProfileKind.Debug, (request, token) => adapter.debugTest(request, token));
 

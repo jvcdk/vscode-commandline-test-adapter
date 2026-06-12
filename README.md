@@ -52,10 +52,11 @@ Please see the [example discovery command](testdata/discover-tests) to see an im
 
 ## Re-discovery of tests
 
-If the list of tests has changed in your workspace, there are two possible ways to let this be reflected in the
+If the list of tests has changed in your workspace, there are three possible ways to let this be reflected in the
 Test Explorer UI:
 
- * Manually triggering the re-discover command.
+ * Using the refresh button in the Testing view toolbar.
+ * Running the `CommandLine Tests: Re-discover tests` command from the command palette.
  * Setting up a file watcher pattern.
 
 See further below.
@@ -70,8 +71,8 @@ Change any of these, and a new test instance (in the Test Explorer) has to be cr
 Note also that if the given test had children, they will also be re-instantiated. The Test Explorer UI will collapse the children
 and their test-run state will be reset.
 
-#### Re-discover command
-Use the `CommandLine Tests: Re-discover tests` command to re-run the discovery of command line tests.
+#### Refresh button and re-discover command
+Use the refresh button in the Testing view toolbar, or run the `CommandLine Tests: Re-discover tests` command from the command palette.
 
 #### File Watcher specification
 Use the `commandLineTestAdapter.watch` settings to set an array of file watcher patterns on which the discovery command should be re-run.
