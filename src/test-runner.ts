@@ -96,8 +96,9 @@ export class TestRunner {
         this.skipChildren(test);
       }
     } catch(e) {
-      this.testRunInstance.errored(test, new vscode.TestMessage(e.message), Date.now() - start);
-      this.testRunInstance.appendOutput(e.message); // Work-around: At the moment it seems that the UI does not show message from testRunInstance.errored(...)
+      const message = e instanceof Error ? e.message : String(e);
+      this.testRunInstance.errored(test, new vscode.TestMessage(message), Date.now() - start);
+      this.testRunInstance.appendOutput(message);
       this.testRunInstance.appendOutput("\r\n");
       this.skipChildren(test);
     } finally {

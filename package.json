@@ -36,15 +36,13 @@
   },
   "dependencies": {
     "split-cmd": "^1.0.1",
-    "split2": "^3.2.2",
-    "tslib": "^1.14.1"
+    "split2": "^3.2.2"
   },
   "devDependencies": {
-    "@types/split2": "^3.2.1",
     "@types/vscode": "^1.63.0",
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
-    "typescript": "^3.9.10",
+    "typescript": "^5.5.0",
     "@vscode/vsce": "^2.6.6"
   },
   "capabilities": {
