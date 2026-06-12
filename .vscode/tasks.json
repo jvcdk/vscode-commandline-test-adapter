@@ -16,14 +16,21 @@
         {
             "type": "npm",
             "script": "watch",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "Package VSIX",
             "type": "process",
-            "command": "vsce",
-            "args": ["package"],
-            "group": "build",
+            "command": "npx",
+            "args": ["vsce", "package"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "dependsOn": ["build"]
         }
     ]
