@@ -6,17 +6,25 @@ import * as vscode from 'vscode';
 import { CommandLineTestAdapter } from './commandline-test-adapter';
 import { Constants } from './constants';
 
-/**
- * Main extension entry point
- *
- * Code is from the vscode-example-test-adapter extension template
- */
-export async function activate(context: vscode.ExtensionContext) {
-  const workspaceFolder = (vscode.workspace.workspaceFolders || [])[0];
+let initialized = false;
 
-  // If we have not a folder opened, then there is nothing to do
+export async function activate(context: vscode.ExtensionContext) {
+  tryInitialize(context);
+
+  context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
+    tryInitialize(context);
+  }));
+}
+
+function tryInitialize(context: vscode.ExtensionContext) {
+  if(initialized)
+    return;
+
+  const workspaceFolder = (vscode.workspace.workspaceFolders || [])[0];
   if(workspaceFolder == undefined)
     return;
+
+  initialized = true;
 
   const log = vscode.window.createOutputChannel(Constants.Name);
   context.subscriptions.push(log);
