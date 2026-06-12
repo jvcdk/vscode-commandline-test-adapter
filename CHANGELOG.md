@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.0
+
+### Security
+ * Declare `untrustedWorkspaces` and `virtualWorkspaces` capabilities so the extension is disabled in Restricted Mode.
+ * Run `cpuCount` command in `testFolder` instead of an empty cwd; clarify that the setting can execute a command.
+ * Document environment-variable exposure via `${env:...}` substitution.
+
+### Bug fixes
+ * Fix `cpuCount` < 1 (e.g. `"0"` or `""`) causing an infinite synchronous loop that freezes the extension host.
+ * Add `'error'` handler to spawned processes and resolve on `'close'` instead of `'exit'` to prevent hangs and truncated output.
+ * Kill child processes on cancellation and extension disposal instead of letting them run indefinitely.
+ * Replace the global `"*"` debug configuration provider with direct config injection to avoid hijacking unrelated debug sessions.
+ * Fix `request.exclude` filter inversion that silently ran zero tests when `exclude` was `undefined`.
+ * Dispose the `onDidChangeConfiguration` listener on deactivation to prevent leaks.
+ * Guarantee `testRun.end()` via `try/finally` and track all active runners to make them cancellable.
+ * Fix `Promise.race` bookkeeping when the same TestItem is enqueued more than once.
+ * Swap test data map only after a full discovery parse succeeds, preventing a half-updated tree.
+ * Chain the discovery promise so concurrent callers get truthful completion.
+ * Fix `isEmpty` strict-equality checks, `substituteString` infinite-loop on self-referencing env vars, and use `Array.isArray` throughout.
+ * Mark children as skipped when a parent test fails or errors.
+ * Handle folderless start by deferring initialization until a workspace folder is added.
+ * Prevent overlapping test discovery runs.
+
+### Improvements
+ * Surface discovery failures to the user via error message notifications.
+ * Report `enqueued()` / `started()` lifecycle states during test runs.
+ * Add `refreshHandler` for the native Testing view refresh button.
+ * Improve `TestMessage`: show output tail and attach source location instead of generic "see log" text.
+ * Switch to `LogOutputChannel` with info/warn/error severity levels and user-adjustable verbosity.
+ * Use command `category` field instead of baking "CommandLine Tests:" prefix into the title.
+ * Improve configuration schema: add item types, defaults, and fix escaped control characters in descriptions.
+ * Set marketplace category to "Testing".
+
+### Internal
+ * Upgrade toolchain: TypeScript 5, drop `tslib`, migrate from deprecated `vsce` to `@vscode/vsce`, switch to bun.
+ * Add ESLint with `@typescript-eslint` flat config and a CI workflow.
+ * Add `vscode:prepublish` script to ensure a fresh build before packaging.
+ * Fix `.vscodeignore` to exclude top-level files from the VSIX package.
+ * Remove dead runtime dependencies `split-cmd`, `split2`, and `@types/split2`.
+ * Update `tsconfig`: target `es2022`, include all of `src/`, set `rootDir`.
+ * Fix LICENSE copyright holder.
+
 ## 1.2.0
 * When launching debug sessions: The debug configuration property `program` is changed to an absolute path (is not absolute, and `cwd` is set).
 
