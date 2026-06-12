@@ -4,23 +4,45 @@ on:
   push:
     tags: ["v*"]
 
-permissions:
-  contents: write
-
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
       - run: bun install --frozen-lockfile
       - run: bunx @vscode/vsce package --no-dependencies
+      - uses: actions/upload-artifact@ea165f8d65b6db9a6b7c67d0a616a1a17f5e5bda # v4
+        with:
+          name: vsix
+          path: "*.vsix"
+
+  github-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        with:
+          name: vsix
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" *.vsix --generate-notes
+        run: gh release create "${{ github.ref_name }}" *.vsix --generate-notes --repo "${{ github.repository }}"
+
+  marketplace:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        with:
+          name: vsix
       - name: Publish to VS Code Marketplace
         env:
           # Note to future self: Generate new token here: https://dev.azure.com/jvcdk-at-github/
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: bunx @vscode/vsce publish --no-dependencies
+        run: bunx @vscode/vsce publish --no-dependencies --packagePath *.vsix
