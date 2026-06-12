@@ -27,6 +27,7 @@
   ],
   "main": "out/main.js",
   "scripts": {
+    "vscode:prepublish": "rimraf out && tsc",
     "clean": "rimraf out *.vsix",
     "build": "tsc",
     "watch": "tsc -w",
