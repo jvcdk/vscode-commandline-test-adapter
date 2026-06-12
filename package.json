@@ -68,7 +68,8 @@
     "commands": [
       {
         "command": "vscode-commandline-test-adapter.rediscoverTests",
-        "title": "CommandLine Tests: Re-discover tests"
+        "title": "Re-discover tests",
+        "category": "CommandLine Tests"
       }
     ],
     "configuration": {
