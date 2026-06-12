@@ -1,4 +1,4 @@
-*/**
+**
 
 !CHANGELOG.md
 !LICENSE
@@ -6,7 +6,3 @@
 !README.md
 !out/**/*.js
 !images/**
-
-!node_modules/**/*.js
-!node_modules/**/package.json
-!node_modules/**/LICENSE
