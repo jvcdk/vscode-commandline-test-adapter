@@ -95,18 +95,27 @@ export class TestRunner {
         test.children.forEach(test => this.testsToRun.push(test))
       }
       else {
-        this.testRunInstance.failed(test, new vscode.TestMessage("Test failed. Please see test log."), Date.now() - start);
+        const msg = this.makeTestMessage(test, tailLines(result.stdOut, 20) || "Test failed. Please see test log.");
+        this.testRunInstance.failed(test, msg, Date.now() - start);
         this.skipChildren(test);
       }
     } catch(e) {
-      const message = e instanceof Error ? e.message : String(e);
-      this.testRunInstance.errored(test, new vscode.TestMessage(message), Date.now() - start);
-      this.testRunInstance.appendOutput(message);
+      const text = e instanceof Error ? e.message : String(e);
+      const msg = this.makeTestMessage(test, text);
+      this.testRunInstance.errored(test, msg, Date.now() - start);
+      this.testRunInstance.appendOutput(text);
       this.testRunInstance.appendOutput("\r\n");
       this.skipChildren(test);
     } finally {
       this.activeProcesses.delete(handle);
     }
+  }
+
+  private makeTestMessage(test: vscode.TestItem, text: string): vscode.TestMessage {
+    const msg = new vscode.TestMessage(text);
+    if(test.uri && test.range)
+      msg.location = new vscode.Location(test.uri, test.range);
+    return msg;
   }
 
   private skipChildren(test: vscode.TestItem) {
@@ -121,4 +130,9 @@ export class TestRunner {
     this.killAll();
     this.tokenDisposable.dispose();
   }
+}
+
+function tailLines(text: string, count: number): string {
+  const lines = text.split(/\r?\n/);
+  return lines.slice(-count).join('\n').trim();
 }

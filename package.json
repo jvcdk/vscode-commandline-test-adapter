@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "18",
     "@types/vscode": "~1.74.0",
     "@typescript-eslint/eslint-plugin": "^8.61.0",
     "@typescript-eslint/parser": "^8.61.0",
@@ -91,7 +92,9 @@
         "commandLineTestAdapter.discoveryArgs": {
           "description": "Array of arguments to discovery command.",
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "scope": "resource"
         },
@@ -115,7 +118,9 @@
         "commandLineTestAdapter.watch": {
           "description": "Array of file patterns to watch to update the tests (re-run the discovery command).",
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "scope": "resource"
         }
