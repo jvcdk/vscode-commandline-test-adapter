@@ -6,7 +6,7 @@ The basic idea is that a discovery command is used to enumerate tests in your wo
 
 This plugin uses the native test explorer API from VS Code.
 
-**Note:** Multi-root workspaces are not currently supported. The extension operates on the first workspace folder only.
+Multi-root workspaces are supported. Each workspace folder is configured and discovered independently.
 
 
 ## Getting started
@@ -134,7 +134,3 @@ Debugging is supported via the `debugConfig` setting / property. When launching 
    * If the debug configuration property `args` is non-empty, it is prepended to the launch command.
 
 3. The debug session is launched.
-
-## Wish list
-
- * Multi-root workspace support.
