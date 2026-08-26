@@ -20,7 +20,7 @@ export class CommandLineTestAdapter {
     private readonly workspaceFolder: vscode.WorkspaceFolder,
     private readonly log: vscode.LogOutputChannel
   ) {
-    this.log.info('Initializing.');
+    this.log.info(`Initializing workspace folder '${workspaceFolder.name}'.`);
   }
 
   setupFileWatchers() {
