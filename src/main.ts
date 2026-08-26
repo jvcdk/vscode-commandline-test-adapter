@@ -19,9 +19,16 @@ export async function activate(context: vscode.ExtensionContext) {
   const instances = new Map<string, WorkspaceAdapterInstance>();
   let controllerId = 0;
 
+  const hasDiscoveryCommand = (workspaceFolder: vscode.WorkspaceFolder) => {
+    const command = vscode.workspace
+      .getConfiguration(Constants.SettingsKey, workspaceFolder.uri)
+      .get<unknown>('discoveryCommand');
+    return typeof command === 'string' && command.trim().length > 0;
+  };
+
   const addWorkspaceFolder = (workspaceFolder: vscode.WorkspaceFolder) => {
     const key = workspaceFolder.uri.toString();
-    if(instances.has(key))
+    if(instances.has(key) || !hasDiscoveryCommand(workspaceFolder))
       return;
 
     const controller = vscode.tests.createTestController(
@@ -66,10 +73,27 @@ export async function activate(context: vscode.ExtensionContext) {
   }));
 
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((ev) => {
-    for(const instance of instances.values()) {
-      const resource = instance.folder.uri;
-      if(ev.affectsConfiguration(Constants.SettingsKey + ".discoveryCommand", resource) ||
-         ev.affectsConfiguration(Constants.SettingsKey + ".discoveryArgs", resource))
+    for(const folder of vscode.workspace.workspaceFolders ?? []) {
+      const resource = folder.uri;
+      const discoveryCommandChanged = ev.affectsConfiguration(
+        Constants.SettingsKey + ".discoveryCommand",
+        resource
+      );
+
+      if(discoveryCommandChanged) {
+        if(hasDiscoveryCommand(folder))
+          addWorkspaceFolder(folder);
+        else
+          removeWorkspaceFolder(folder);
+      }
+
+      const instance = instances.get(folder.uri.toString());
+      if(instance == undefined)
+        continue;
+
+      if(discoveryCommandChanged ||
+         ev.affectsConfiguration(Constants.SettingsKey + ".discoveryArgs", resource) ||
+         ev.affectsConfiguration(Constants.SettingsKey + ".testFolder", resource))
         instance.adapter.discoverTests();
 
       if(ev.affectsConfiguration(Constants.SettingsKey + ".watch", resource))

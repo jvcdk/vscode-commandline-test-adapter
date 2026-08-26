@@ -14,6 +14,7 @@ export class CommandLineTestAdapter {
   private discoveryInFlight : boolean = false;
   private discoveryPending : boolean = false;
   private discoveryPromise : Promise<void> = Promise.resolve();
+  private disposed : boolean = false;
 
   constructor(
     private readonly testController: vscode.TestController,
@@ -24,6 +25,9 @@ export class CommandLineTestAdapter {
   }
 
   setupFileWatchers() {
+    if(this.disposed)
+      return;
+
     this.clearFileWatchers();
 
     const [fileWatcherPatterns] = this.getConfigArrays(['watch']);
@@ -47,6 +51,9 @@ export class CommandLineTestAdapter {
 
   // Debounce discovery so a burst of file-watcher events triggers only one run.
   scheduleDiscovery() {
+    if(this.disposed)
+      return;
+
     if(this.discoveryDebounceTimer != undefined)
       clearTimeout(this.discoveryDebounceTimer);
     this.discoveryDebounceTimer = setTimeout(() => {
@@ -56,6 +63,9 @@ export class CommandLineTestAdapter {
   }
 
   discoverTests(): Promise<void> {
+    if(this.disposed)
+      return Promise.resolve();
+
     // Never run two discovery processes at once; they only fight over shared
     // resources (e.g. a build lock). If a request arrives while one is running,
     // run exactly one more pass afterwards to pick up the latest changes.
@@ -85,6 +95,8 @@ export class CommandLineTestAdapter {
         throw new Error(`Setting ${Constants.SettingsKey}.discoveryCommand should be a string.`);
 
       await runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines, /* mergeStderrToStdout */ false).result.then((result) => {
+        if(this.disposed)
+          return;
         if(result.stdErr.length > 0)
           this.log.warn(result.stdErr);
         if(result.returnCode == 0)
@@ -98,17 +110,21 @@ export class CommandLineTestAdapter {
           this.showDiscoveryError(`Discovery command exited with code ${result.returnCode}.`);
         }
       }).catch((reason) => {
+        if(this.disposed)
+          return;
         this.log.error(String(reason));
         this.showDiscoveryError(`Discovery command failed: ${reason}`);
       });
     }
     catch(e) {
+      if(this.disposed)
+        return;
       this.log.error(String(e));
       this.showDiscoveryError(String(e));
     }
     finally {
       this.discoveryInFlight = false;
-      if(this.discoveryPending) {
+      if(this.discoveryPending && !this.disposed) {
         this.discoveryPending = false;
         await this.discoverTests();
       }
@@ -449,6 +465,8 @@ export class CommandLineTestAdapter {
   }
 
   dispose(): void {
+    this.disposed = true;
+    this.discoveryPending = false;
     if(this.discoveryDebounceTimer != undefined)
       clearTimeout(this.discoveryDebounceTimer);
     for(const runner of this.testRunners)

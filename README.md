@@ -7,6 +7,7 @@ The basic idea is that a discovery command is used to enumerate tests in your wo
 This plugin uses the native test explorer API from VS Code.
 
 Multi-root workspaces are supported. Each workspace folder is configured and discovered independently.
+Workspace folders without a configured discovery command are ignored.
 
 
 ## Getting started
