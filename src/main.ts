@@ -17,7 +17,6 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(log);
 
   const instances = new Map<string, WorkspaceAdapterInstance>();
-  let controllerId = 0;
 
   const hasDiscoveryCommand = (workspaceFolder: vscode.WorkspaceFolder) => {
     const command = vscode.workspace
@@ -31,8 +30,12 @@ export async function activate(context: vscode.ExtensionContext) {
     if(instances.has(key) || !hasDiscoveryCommand(workspaceFolder))
       return;
 
+    // Derive the controller id from the folder uri so it stays stable across
+    // sessions. VS Code keys persisted test state by controller id; a running
+    // counter would reassign identities whenever roots are reordered, added or
+    // unconfigured.
     const controller = vscode.tests.createTestController(
-      `${Constants.Id}-${controllerId++}`,
+      `${Constants.Id}-${key}`,
       `${Constants.Name}: ${workspaceFolder.name}`
     );
     const adapter = new CommandLineTestAdapter(controller, workspaceFolder, log);
