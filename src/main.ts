@@ -7,7 +7,6 @@ import { CommandLineTestAdapter } from './commandline-test-adapter';
 import { Constants } from './constants';
 
 interface WorkspaceAdapterInstance {
-  readonly folder: vscode.WorkspaceFolder;
   readonly controller: vscode.TestController;
   readonly adapter: CommandLineTestAdapter;
 }
@@ -51,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext) {
     controller.createRunProfile('Debug', vscode.TestRunProfileKind.Debug, (request, token) => adapter.debugTest(request, token));
 
     adapter.setupFileWatchers();
-    instances.set(key, { folder: workspaceFolder, controller, adapter });
+    instances.set(key, { controller, adapter });
   };
 
   const removeWorkspaceFolder = (workspaceFolder: vscode.WorkspaceFolder) => {
