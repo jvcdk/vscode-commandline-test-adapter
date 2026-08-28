@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.0
+
+### Features
+ * Multi-root workspace support: one test controller and adapter per configured workspace folder, each with its own
+   resource-scoped settings, file watchers and discovery.
+ * React to workspace folders being added or removed, and to `discoveryCommand` being set or cleared, without a reload.
+ * Ignore workspace folders that do not configure a discovery command, logging one line per skipped folder.
+ * Re-run discovery when `testFolder` changes, not just `discoveryCommand` and `discoveryArgs`.
+
+### Bug fixes
+ * Derive test controller ids from the workspace folder uri so persisted test state is not reassigned between folders
+   when roots are reordered, added or unconfigured.
+ * Kill in-flight discovery and `cpuCount` processes when an adapter is disposed.
+ * Discard discovery results that arrive after disposal.
+
+### Improvements
+ * Name the workspace folder in log messages and error notifications, which now share one output channel.
+
 ## 1.3.0
 
 ### Security

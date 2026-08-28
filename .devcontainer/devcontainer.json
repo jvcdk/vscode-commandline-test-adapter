@@ -14,7 +14,7 @@
 		}
 	},
 
-	"postCreateCommand": "npm install && npm install -g @vscode/vsce",
+	"postCreateCommand": "bun install && bun add --global @vscode/vsce",
 
 	"remoteUser": "node",
 	"features": {

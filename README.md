@@ -6,7 +6,8 @@ The basic idea is that a discovery command is used to enumerate tests in your wo
 
 This plugin uses the native test explorer API from VS Code.
 
-**Note:** Multi-root workspaces are not currently supported. The extension operates on the first workspace folder only.
+Multi-root workspaces are supported. Each workspace folder is configured and discovered independently.
+Workspace folders without a configured discovery command are ignored.
 
 
 ## Getting started
@@ -97,6 +98,10 @@ The plugin supports the following settings properties:
 | `commandLineTestAdapter.translateNewlines` | Translate newlines from '\n' to '\r\n' needed for terminal output.                                                                 | True
 | `commandLineTestAdapter.watch`             | Array of file patterns to watch to update the tests (re-run the discovery command).                                                |
 
+All settings are resource-scoped. In a multi-root workspace each folder is configured on its own, either in that folder's
+`.vscode/settings.json` or in a folder-specific `settings` block of the `.code-workspace` file. A folder that does not set
+`commandLineTestAdapter.discoveryCommand` is ignored.
+
 ### Variable substitution
 
 Some configuration properties support the replacement of special values in their string value by using a `${variable}` syntax.
@@ -134,7 +139,3 @@ Debugging is supported via the `debugConfig` setting / property. When launching 
    * If the debug configuration property `args` is non-empty, it is prepended to the launch command.
 
 3. The debug session is launched.
-
-## Wish list
-
- * Multi-root workspace support.
