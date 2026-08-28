@@ -16,12 +16,28 @@ export class CommandLineTestAdapter {
   private discoveryPromise : Promise<void> = Promise.resolve();
   private disposed : boolean = false;
 
+  // All adapters share one output channel, so every message names its folder.
+  private readonly logPrefix : string;
+
   constructor(
     private readonly testController: vscode.TestController,
     private readonly workspaceFolder: vscode.WorkspaceFolder,
     private readonly log: vscode.LogOutputChannel
   ) {
-    this.log.info(`Initializing workspace folder '${workspaceFolder.name}'.`);
+    this.logPrefix = `[${workspaceFolder.name}]`;
+    this.logInfo('Initializing.');
+  }
+
+  private logInfo(message: string) {
+    this.log.info(`${this.logPrefix} ${message}`);
+  }
+
+  private logWarn(message: string) {
+    this.log.warn(`${this.logPrefix} ${message}`);
+  }
+
+  private logError(message: string) {
+    this.log.error(`${this.logPrefix} ${message}`);
   }
 
   setupFileWatchers() {
@@ -98,28 +114,28 @@ export class CommandLineTestAdapter {
         if(this.disposed)
           return;
         if(result.stdErr.length > 0)
-          this.log.warn(result.stdErr);
+          this.logWarn(result.stdErr);
         if(result.returnCode == 0)
           this.parseDiscoveryString(testFolder, result.stdOut);
         else {
-          this.log.error(`Discovery of tests returned err code ${result.returnCode}.`);
+          this.logError(`Discovery of tests returned err code ${result.returnCode}.`);
           if(result.stdOut.length > 0) {
-            this.log.error(`Stdout:`);
-            this.log.error(result.stdOut);
+            this.logError(`Stdout:`);
+            this.logError(result.stdOut);
           }
           this.showDiscoveryError(`Discovery command exited with code ${result.returnCode}.`);
         }
       }).catch((reason) => {
         if(this.disposed)
           return;
-        this.log.error(String(reason));
+        this.logError(String(reason));
         this.showDiscoveryError(`Discovery command failed: ${reason}`);
       });
     }
     catch(e) {
       if(this.disposed)
         return;
-      this.log.error(String(e));
+      this.logError(String(e));
       this.showDiscoveryError(String(e));
     }
     finally {
@@ -135,7 +151,7 @@ export class CommandLineTestAdapter {
     const testRun = this.testController.createTestRun(request);
 
     const [translateNewlines] = this.getConfigBooleans(['translateNewlines']);
-    const runner = new TestRunner(testRun, this.testInternalData, this.log, token, translateNewlines, await this.getCpuCount());
+    const runner = new TestRunner(testRun, this.testInternalData, this.log, this.logPrefix, token, translateNewlines, await this.getCpuCount());
     this.testRunners.add(runner);
 
     const tests: vscode.TestItem[] = this.getTestsFromRequest(request);
@@ -152,9 +168,9 @@ export class CommandLineTestAdapter {
       const data = this.testInternalData.get(test);
       const configName = data?.debugConfig || defaultDebugConfigName;
       if(isEmpty(configName)) {
-        this.log.error(`Could not start debugging of '${test.label}'.`);
-        this.log.error(`Discovery command did not specify a debug configuration explicitly, and ${Constants.SettingsKey}.debugConfig is not set.`);
-        vscode.window.showErrorMessage(`Could not launch debug task for ${test.label}. Please see Command Line Test Adapter log window`);
+        this.logError(`Could not start debugging of '${test.label}'.`);
+        this.logError(`Discovery command did not specify a debug configuration explicitly, and ${Constants.SettingsKey}.debugConfig is not set.`);
+        vscode.window.showErrorMessage(`${this.logPrefix} Could not launch debug task for ${test.label}. Please see Command Line Test Adapter log window`);
         continue;
       }
 
@@ -162,32 +178,32 @@ export class CommandLineTestAdapter {
       const configurations: vscode.DebugConfiguration[] = launchConfig.get('configurations') || [];
       const baseConfig = configurations.find(c => c.name === configName);
       if(baseConfig == undefined) {
-        this.log.error(`Debug configuration '${configName}' not found in launch.json.`);
-        vscode.window.showErrorMessage(`Debug configuration '${configName}' not found in launch.json.`);
+        this.logError(`Debug configuration '${configName}' not found in launch.json.`);
+        vscode.window.showErrorMessage(`${this.logPrefix} Debug configuration '${configName}' not found in launch.json.`);
         continue;
       }
 
       const debugConfig = { ...baseConfig };
 
       if(data == undefined) {
-        this.log.error(`Could not find internal data for test ${test.label}.`);
+        this.logError(`Could not find internal data for test ${test.label}.`);
         continue;
       }
 
       if(!isEmpty(debugConfig["program"]))
-        this.log.warn(`'program' field of '${debugConfig.name}' was not empty - it will be overwritten.`);
+        this.logWarn(`'program' field of '${debugConfig.name}' was not empty - it will be overwritten.`);
       debugConfig["program"] = data.command;
       debugConfig["args"] = [...(debugConfig["args"] ?? []), ...data.args];
 
       const args = debugConfig["args"].map((arg: string) => `"${arg}"`).join(" ");
-      this.log.info(`Launching debug session '${test.label}', command: ${debugConfig["program"]} ${args}`);
+      this.logInfo(`Launching debug session '${test.label}', command: ${debugConfig["program"]} ${args}`);
 
       await vscode.debug.startDebugging(this.workspaceFolder, debugConfig)
         .then(
           () => {},
           reason => {
-            this.log.error(`Could not start debugging of '${test.label}'.`);
-            this.log.error(String(reason));
+            this.logError(`Could not start debugging of '${test.label}'.`);
+            this.logError(String(reason));
           }
         );
     }
@@ -219,26 +235,26 @@ export class CommandLineTestAdapter {
     cpuCount = 1;
     await runExternalProcess(cpuCountStr, [], testFolder, /* translateNewlines */ true, /* mergeStderrToStdout */ false).result.then((result) => {
       if(result.stdErr.length > 0)
-        this.log.warn(result.stdErr);
+        this.logWarn(result.stdErr);
       if(result.returnCode == 0) {
         if(result.stdOut.length == 0)
-          this.log.warn(`Detecting number of CPUs via ${cpuCountStr} returned no output.`);
+          this.logWarn(`Detecting number of CPUs via ${cpuCountStr} returned no output.`);
         else {
           cpuCount = +result.stdOut;
           if(isNaN(cpuCount)) {
-            this.log.warn(`Detecting number of CPUs via ${cpuCountStr}: Not an int: ${result.stdOut}`);
+            this.logWarn(`Detecting number of CPUs via ${cpuCountStr}: Not an int: ${result.stdOut}`);
             cpuCount = 1;
           }
         }
       }
       else {
-        this.log.error(`Detecting number of CPUs via ${cpuCountStr} returned err code ${result.returnCode}.`);
+        this.logError(`Detecting number of CPUs via ${cpuCountStr} returned err code ${result.returnCode}.`);
         if(result.stdOut.length > 0) {
-          this.log.error(`Stdout:`);
-          this.log.error(result.stdOut);
+          this.logError(`Stdout:`);
+          this.logError(result.stdOut);
         }
       }
-    }).catch((reason) => this.log.error(String(reason)));
+    }).catch((reason) => this.logError(String(reason)));
     return Math.max(1, Math.floor(cpuCount));
   }
 
@@ -251,19 +267,19 @@ export class CommandLineTestAdapter {
         this.testInternalData = newTestData;
       }
       else {
-        this.log.error("Got unexpected json data from discover command.");
-        this.log.error("Please see documentation for supported data structure.");
-        this.log.error("Received data:");
-        this.log.error(text);
+        this.logError("Got unexpected json data from discover command.");
+        this.logError("Please see documentation for supported data structure.");
+        this.logError("Received data:");
+        this.logError(text);
         this.showDiscoveryError("Discovery command returned unexpected data format.");
       }
     }
     catch(e) {
-      this.log.error("Error parsing json data from discover command.");
-      this.log.error("Err message:");
-      this.log.error(String(e));
-      this.log.error("Received data:");
-      this.log.error(text);
+      this.logError("Error parsing json data from discover command.");
+      this.logError("Err message:");
+      this.logError(String(e));
+      this.logError("Received data:");
+      this.logError(text);
       this.showDiscoveryError("Failed to parse discovery output as JSON.");
     }
   }
@@ -275,7 +291,7 @@ export class CommandLineTestAdapter {
 
     tests.forEach(testCase => {
       if(isEmpty(testCase.label)) {
-        this.log.warn("Empty label. Ignoring test case.");
+        this.logWarn("Empty label. Ignoring test case.");
         return;
       }
 
@@ -336,7 +352,7 @@ export class CommandLineTestAdapter {
       if(typeof testCase.debugConfig === 'string')
         internalData.debugConfig = testCase.debugConfig;
       else
-        this.log.warn(`Unsupported type '${typeof testCase.debugConfig}' for property 'debugConfig' on test case '${test.label}'.`);
+        this.logWarn(`Unsupported type '${typeof testCase.debugConfig}' for property 'debugConfig' on test case '${test.label}'.`);
     }
 
     return test;
@@ -458,7 +474,7 @@ export class CommandLineTestAdapter {
     }
 
   private showDiscoveryError(message: string) {
-    vscode.window.showErrorMessage(message, 'Open Log').then(action => {
+    vscode.window.showErrorMessage(`${this.logPrefix} ${message}`, 'Open Log').then(action => {
       if(action === 'Open Log')
         this.log.show();
     });
