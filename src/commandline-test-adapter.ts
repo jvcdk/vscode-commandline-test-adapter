@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { runExternalProcess } from './extprocess';
+import { runExternalProcess, ExtProcessHandle } from './extprocess';
 import { TestInternalData } from './test-internal-data'
 import { TestRunner } from './test-runner'
 import { Constants } from './constants';
 
 export class CommandLineTestAdapter {
   private testRunners = new Set<TestRunner>();
+  private activeProcesses = new Set<ExtProcessHandle>();
   private testInternalData = new WeakMap<vscode.TestItem, TestInternalData>();
   private idCounter : number = 0;
   private fileWatchers : Array<vscode.FileSystemWatcher> = [];
@@ -110,7 +111,8 @@ export class CommandLineTestAdapter {
       if(typeof discoveryCommand !== "string")
         throw new Error(`Setting ${Constants.SettingsKey}.discoveryCommand should be a string.`);
 
-      await runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines, /* mergeStderrToStdout */ false).result.then((result) => {
+      const handle = this.trackProcess(runExternalProcess(discoveryCommand, discoveryArgs, testFolder, translateNewlines, /* mergeStderrToStdout */ false));
+      await handle.result.finally(() => this.activeProcesses.delete(handle)).then((result) => {
         if(this.disposed)
           return;
         if(result.stdErr.length > 0)
@@ -233,7 +235,10 @@ export class CommandLineTestAdapter {
       return Math.max(1, Math.floor(cpuCount));
 
     cpuCount = 1;
-    await runExternalProcess(cpuCountStr, [], testFolder, /* translateNewlines */ true, /* mergeStderrToStdout */ false).result.then((result) => {
+    const handle = this.trackProcess(runExternalProcess(cpuCountStr, [], testFolder, /* translateNewlines */ true, /* mergeStderrToStdout */ false));
+    await handle.result.finally(() => this.activeProcesses.delete(handle)).then((result) => {
+      if(this.disposed)
+        return;
       if(result.stdErr.length > 0)
         this.logWarn(result.stdErr);
       if(result.returnCode == 0) {
@@ -254,7 +259,11 @@ export class CommandLineTestAdapter {
           this.logError(result.stdOut);
         }
       }
-    }).catch((reason) => this.logError(String(reason)));
+    }).catch((reason) => {
+      if(this.disposed)
+        return;
+      this.logError(String(reason));
+    });
     return Math.max(1, Math.floor(cpuCount));
   }
 
@@ -379,6 +388,11 @@ export class CommandLineTestAdapter {
     return [test, internalData];
   }
 
+  private trackProcess(handle: ExtProcessHandle) : ExtProcessHandle {
+    this.activeProcesses.add(handle);
+    return handle;
+  }
+
   private getNewId() : string {
     return `cmdline-test-${this.idCounter++}`;
   }
@@ -487,6 +501,8 @@ export class CommandLineTestAdapter {
       clearTimeout(this.discoveryDebounceTimer);
     for(const runner of this.testRunners)
       runner.dispose();
+    for(const handle of this.activeProcesses)
+      handle.kill();
     this.clearFileWatchers();
   }
 }
