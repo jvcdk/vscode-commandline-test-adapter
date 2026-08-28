@@ -27,8 +27,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const addWorkspaceFolder = (workspaceFolder: vscode.WorkspaceFolder) => {
     const key = workspaceFolder.uri.toString();
-    if(instances.has(key) || !hasDiscoveryCommand(workspaceFolder))
+    if(instances.has(key))
       return;
+
+    if(!hasDiscoveryCommand(workspaceFolder)) {
+      log.info(`[${workspaceFolder.name}] Not a test workspace folder: ${Constants.SettingsKey}.discoveryCommand is not set.`);
+      return;
+    }
 
     // Derive the controller id from the folder uri so it stays stable across
     // sessions. VS Code keys persisted test state by controller id; a running
